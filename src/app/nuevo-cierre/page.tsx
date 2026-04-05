@@ -85,6 +85,7 @@ export default function NuevoCierrePage() {
 
   const { error } = await supabase.from("cierres").insert([
     {
+      user_id: (await supabase.auth.getUser()).data.user?.id,
       fecha,
       chofer,
       movil,
