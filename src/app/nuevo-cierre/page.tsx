@@ -1,5 +1,5 @@
 "use client";
-
+import Link from "next/link";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -134,16 +134,12 @@ export default function NuevoCierrePage() {
             {mensaje}
           </div>
         )}
-<button
-  onClick={() => window.history.back()}
-  style={{
-    marginBottom: "10px",
-    padding: "8px 12px",
-    cursor: "pointer"
-  }}
+<Link
+  href="/admin"
+  className="inline-block mb-3 rounded border px-3 py-2"
 >
-  ← Volver
-</button>
+  ← Volver al admin
+</Link>
         <form className="space-y-4">
           <div>
             <label className="mb-1 block font-medium">Fecha</label>
