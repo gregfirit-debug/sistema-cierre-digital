@@ -134,7 +134,16 @@ export default function NuevoCierrePage() {
             {mensaje}
           </div>
         )}
-
+<button
+  onClick={() => window.history.back()}
+  style={{
+    marginBottom: "10px",
+    padding: "8px 12px",
+    cursor: "pointer"
+  }}
+>
+  ← Volver
+</button>
         <form className="space-y-4">
           <div>
             <label className="mb-1 block font-medium">Fecha</label>
