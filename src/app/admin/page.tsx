@@ -27,15 +27,42 @@ export default function AdminPage() {
 
   useEffect(() => {
     const revisarSesionYCargar = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+   const { data: userData } = await supabase.auth.getUser();
+console.log("USER:", userData);
+console.log("COOPERATIVA:", cooperativa);
+if (!userData.user) {
+  router.push("/login");
+  return;
+}   
+const { data: profile, error: profileError } = await supabase
+  .from("profiles")
+  .select("cooperativa_id")
+  .eq("id", userData.user.id)
+  .single();
 
-      if (!session) {
-        router.push("/login");
-        return;
-      }
+if (profileError || !profile) {
+  setErrorTexto("No se encontró el perfil del usuario.");
+  setCargando(false);
+  return;
+}
 
+const { data: cooperativa, error: cooperativaError } = await supabase
+  .from("cooperativas")
+  .select("activa")
+  .eq("id", profile.cooperativa_id)
+  .single();
+
+if (cooperativaError || !cooperativa) {
+  setErrorTexto("No se encontró la cooperativa.");
+  setCargando(false);
+  return;
+}
+
+if (!cooperativa.activa) {
+  await supabase.auth.signOut();
+  router.push("/login");
+  return;
+}
       const { data, error } = await supabase
         .from("cierres")
         .select("id, fecha, chofer, movil, turno, total_entregar, created_at")
