@@ -59,8 +59,7 @@ if (cooperativaError || !cooperativa) {
 }
 
 if (true) {
-  await supabase.auth.signOut();
-  router.push("/login");
+  window.location.href = "/login";
   return;
 }
       const { data, error } = await supabase
