@@ -29,7 +29,7 @@ export default function AdminPage() {
     const revisarSesionYCargar = async () => {
    const { data: userData } = await supabase.auth.getUser();
 console.log("USER:", userData);
-console.log("COOPERATIVA:", cooperativa);
+
 if (!userData.user) {
   router.push("/login");
   return;
@@ -51,7 +51,7 @@ const { data: cooperativa, error: cooperativaError } = await supabase
   .select("activa")
   .eq("id", profile.cooperativa_id)
   .single();
-
+console.log("COOPERATIVA:", cooperativa);
 if (cooperativaError || !cooperativa) {
   setErrorTexto("No se encontró la cooperativa.");
   setCargando(false);
