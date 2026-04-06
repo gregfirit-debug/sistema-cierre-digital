@@ -82,25 +82,32 @@ export default function NuevoCierrePage() {
 
     fotoPosUrl = urlData.publicUrl;
   }
+const { data: userData } = await supabase.auth.getUser();
 
+const { data: profile } = await supabase
+  .from("profiles")
+  .select("cooperativa_id")
+  .eq("id", userData.user.id)
+  .single();
   const { error } = await supabase.from("cierres").insert([
-    {
-      user_id: (await supabase.auth.getUser()).data.user?.id,
-      fecha,
-      chofer,
-      movil,
-      turno,
-      km_inicio: Number(kmInicio),
-      km_fin: Number(kmFin),
-      km_total: kmTotalCalculado,
-      total_reloj: Number(totalReloj),
-      total_tarjetas: Number(totalTarjetas),
-      gastos: Number(gastos),
-      total_entregar: totalEntregarCalculado,
-      observaciones,
-      foto_reloj_url: fotoRelojUrl,
-      foto_pos_url: fotoPosUrl,
-    },
+ {
+  user_id: userData.user?.id,
+  cooperativa_id: profile?.cooperativa_id,
+  fecha,
+  chofer,
+  movil,
+  turno,
+  km_inicio: Number(kmInicio),
+  km_fin: Number(kmFin),
+  km_total: kmTotalCalculado,
+  total_reloj: Number(totalReloj),
+  total_tarjetas: Number(totalTarjetas),
+  gastos: Number(gastos),
+  total_entregar: totalEntregarCalculado,
+  observaciones,
+  foto_reloj_url: fotoRelojUrl,
+  foto_pos_url: fotoPosUrl,
+},
   ]);
 
   if (error) {
