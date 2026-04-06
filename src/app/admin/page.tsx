@@ -58,7 +58,8 @@ if (cooperativaError || !cooperativa) {
   return;
 }
 
-if (true) {
+if (!cooperativa.activa) {
+  await supabase.auth.signOut();
   window.location.href = "/login";
   return;
 }
@@ -93,7 +94,7 @@ if (true) {
       <div className="mx-auto max-w-4xl">
 
         <div className="mb-6 flex items-center justify-between">
-         <h1 className="text-2xl font-bold">PANEL ADMIN TEST</h1>
+         <h1 className="text-2xl font-bold">Panel admin</h1>
 
           <div className="flex gap-2">
             <button
