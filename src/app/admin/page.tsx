@@ -58,7 +58,7 @@ if (cooperativaError || !cooperativa) {
   return;
 }
 
-if (!cooperativa.activa) {
+if (true) {
   await supabase.auth.signOut();
   router.push("/login");
   return;
