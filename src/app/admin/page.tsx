@@ -51,18 +51,16 @@ const { data: cooperativa, error: cooperativaError } = await supabase
   .select("activa")
   .eq("id", profile.cooperativa_id)
   .single();
-console.log("COOPERATIVA:", cooperativa);
+
 if (cooperativaError || !cooperativa) {
   setErrorTexto("No se encontró la cooperativa.");
   setCargando(false);
   return;
 }
 
-if (!cooperativa.activa) {
-  await supabase.auth.signOut();
-  window.location.href = "/login";
-  return;
-}
+setErrorTexto("Valor de activa: " + String(cooperativa.activa));
+setCargando(false);
+return;
       const { data, error } = await supabase
         .from("cierres")
         .select("id, fecha, chofer, movil, turno, total_entregar, created_at")
