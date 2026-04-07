@@ -65,8 +65,8 @@ if (cooperativaError || !cooperativa) {
 }
 
 if (!cooperativa.activa) {
-  await supabase.auth.signOut();
-  router.replace("/login");
+  setErrorTexto("Cooperativa inactiva. Contacte al administrador.");
+  setCargando(false);
   return;
 }
 const { data, error } = await supabase
@@ -124,11 +124,22 @@ const { data, error } = await supabase
           </div>
         </div>
 
-        {errorTexto && (
-          <div className="mb-4 rounded bg-red-100 p-3 text-center text-red-900">
-            Error: {errorTexto}
-          </div>
-        )}
+       {errorTexto && (
+  <div className="mb-4 rounded bg-red-100 p-3 text-center text-red-900">
+    <p>{errorTexto}</p>
+
+    <button
+      type="button"
+      onClick={async () => {
+        await supabase.auth.signOut();
+        router.push("/login");
+      }}
+      className="mt-3 rounded bg-black px-4 py-2 text-white"
+    >
+      Cerrar sesión
+    </button>
+  </div>
+)} 
 
         <div className="mb-4">
           <input
