@@ -40,8 +40,14 @@ const { data: profile, error: profileError } = await supabase
   .eq("id", userData.user.id)
   .single();
 
-if (profileError || !profile) {
-  setErrorTexto("No se encontró el perfil del usuario.");
+if (profileError) {
+  setErrorTexto("Error profile: " + profileError.message);
+  setCargando(false);
+  return;
+}
+
+if (!profile) {
+  setErrorTexto("Profile vacío");
   setCargando(false);
   return;
 }
