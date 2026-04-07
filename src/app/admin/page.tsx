@@ -66,12 +66,12 @@ return;
         .select("id, fecha, chofer, movil, turno, total_entregar, created_at")
         .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error(error.message);
-        setErrorTexto(error.message);
-        setCargando(false);
-        return;
-      }
+     if (error) {
+  console.error(error);
+  setErrorTexto("Error al cargar cierres.");
+  setCargando(false);
+  return;
+}
 
       setCierres(data || []);
       setCargando(false);
