@@ -38,7 +38,7 @@ const { data: profile, error: profileError } = await supabase
   .from("profiles")
   .select("cooperativa_id")
   .eq("id", userData.user.id)
-  .single();
+  .maybeSingle();
 
 if (profileError) {
   setErrorTexto("Error profile: " + profileError.message);
@@ -47,7 +47,7 @@ if (profileError) {
 }
 
 if (!profile) {
-  setErrorTexto("Profile vacío");
+  setErrorTexto("Profile vacío para user id: " + userData.user.id);
   setCargando(false);
   return;
 }
