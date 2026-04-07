@@ -92,7 +92,7 @@ return;
       <div className="mx-auto max-w-4xl">
 
         <div className="mb-6 flex items-center justify-between">
-         <h1 className="text-2xl font-bold">Panel admin</h1>
+        <h1 className="text-2xl font-bold">PANEL ADMIN NUEVO</h1>
 
           <div className="flex gap-2">
             <button
