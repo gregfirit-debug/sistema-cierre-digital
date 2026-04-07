@@ -10,7 +10,24 @@ export async function POST(req: Request) {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
+const { count } = await supabaseAdmin
+  .from("profiles")
+  .select("*", { count: "exact", head: true })
+  .eq("cooperativa_id", cooperativa_id);
 
+const { data: cooperativa } = await supabaseAdmin
+  .from("cooperativas")
+  .select("max_usuarios")
+  .eq("id", cooperativa_id)
+  .single();
+
+if (!cooperativa) {
+  return NextResponse.json({ error: "No se encontró la cooperativa" }, { status: 400 });
+}
+
+if ((count || 0) >= cooperativa.max_usuarios) {
+  return NextResponse.json({ error: "Límite de usuarios alcanzado" }, { status: 400 });
+}
     const { data: authData, error: authError } =
       await supabaseAdmin.auth.admin.createUser({
         email,
