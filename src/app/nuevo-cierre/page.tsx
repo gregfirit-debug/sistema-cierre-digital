@@ -84,6 +84,11 @@ export default function NuevoCierrePage() {
   }
 const { data: userData } = await supabase.auth.getUser();
 
+if (!userData.user) {
+  alert("No hay usuario logueado");
+  return;
+}
+
 const { data: profile } = await supabase
   .from("profiles")
   .select("cooperativa_id")
