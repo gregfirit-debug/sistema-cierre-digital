@@ -18,18 +18,39 @@ export default function AdminUsuariosPage() {
       return;
     }
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("cooperativa_id")
-      .eq("id", userData.user.id)
-      .single();
+   const { data: profile } = await supabase
+  .from("profiles")
+  .select("cooperativa_id")
+  .eq("id", session.user.id)
+  .single();
 
-    if (!profile) {
-      setMensaje("No se encontró el profile");
-      return;
-    }
+if (!profile) {
+  setMensaje("No se encontró el profile");
+  return;
+}
 
-    const res = await fetch("/api/crear-usuario", {
+const { count } = await supabase
+  .from("profiles")
+  .select("*", { count: "exact", head: true })
+  .eq("cooperativa_id", profile.cooperativa_id);
+
+const { data: cooperativa } = await supabase
+  .from("cooperativas")
+  .select("max_usuarios")
+  .eq("id", profile.cooperativa_id)
+  .single();
+
+if (!cooperativa) {
+  setMensaje("No se encontró la cooperativa");
+  return;
+}
+
+if ((count || 0) >= cooperativa.max_usuarios) {
+  setMensaje("Límite de usuarios alcanzado");
+  return;
+}
+
+const res = await fetch("/api/crear-usuario", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
