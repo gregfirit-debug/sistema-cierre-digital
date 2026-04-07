@@ -25,9 +25,9 @@ if (!cooperativa) {
   return NextResponse.json({ error: "No se encontró la cooperativa" }, { status: 400 });
 }
 
-if ((count || 0) >= cooperativa.max_usuarios) {
-  return NextResponse.json({ error: "Límite de usuarios alcanzado" }, { status: 400 });
-}
+return NextResponse.json({
+  error: "DEBUG count=" + String(count) + " max=" + String(cooperativa.max_usuarios)
+}, { status: 400 });
     const { data: authData, error: authError } =
       await supabaseAdmin.auth.admin.createUser({
         email,
