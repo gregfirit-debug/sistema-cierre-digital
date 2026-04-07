@@ -47,6 +47,7 @@ export default function AdminUsuariosPage() {
       setMensaje(data.error);
     } else {
       setMensaje("Usuario creado");
+      alert("Usuario creado correctamente");
       setEmail("");
       setPassword("");
     }
