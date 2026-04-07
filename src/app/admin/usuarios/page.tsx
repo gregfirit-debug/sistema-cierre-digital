@@ -21,7 +21,7 @@ export default function AdminUsuariosPage() {
    const { data: profile } = await supabase
   .from("profiles")
   .select("cooperativa_id")
-  .eq("id", session.user.id)
+ .eq("id", userData.user.id)
   .single();
 
 if (!profile) {
