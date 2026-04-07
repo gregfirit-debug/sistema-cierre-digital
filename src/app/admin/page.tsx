@@ -28,7 +28,7 @@ export default function AdminPage() {
   useEffect(() => {
     const revisarSesionYCargar = async () => {
    const { data: userData } = await supabase.auth.getUser();
-console.log("USER:", userData);
+
 
 if (!userData.user) {
   router.push("/login");
@@ -64,11 +64,7 @@ if (cooperativaError || !cooperativa) {
   return;
 }
 
-if (!cooperativa.activa) {
-  setErrorTexto("Cooperativa inactiva. Contacte al administrador.");
-  setCargando(false);
-  return;
-}
+
 const { data, error } = await supabase
         .from("cierres")
         .select("id, fecha, chofer, movil, turno, total_entregar, created_at")
@@ -100,7 +96,7 @@ const { data, error } = await supabase
       <div className="mx-auto max-w-4xl">
 
         <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">PANEL ADMIN NUEVO</h1>
+       <h1 className="text-2xl font-bold">Panel admin</h1>
 
           <div className="flex gap-2">
             <button
