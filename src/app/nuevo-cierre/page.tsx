@@ -90,31 +90,23 @@ export default function NuevoCierrePage() {
   const handleGuardarCierre = async () => {
     setMensaje("Guardando...");
 
-   const userResult = await supabase.auth.getUser();
-const user = userResult.data.user;
+  const userId = localStorage.getItem("user_id");
+const userEmail = localStorage.getItem("user_email");
+const cooperativaId = localStorage.getItem("cooperativa_id");
 
-if (!user) {
+if (!userId || !cooperativaId) {
   setMensaje("No hay usuario logueado");
   return;
 }
 
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("cooperativa_id")
-     .eq("id", user.id)
-      .single();
-
-    if (profileError || !profile) {
-      setMensaje("No se encontró el profile");
-      return;
-    }
+  
 
     if (!fotoReloj || !fotoPos) {
       setMensaje("Faltan fotos");
       return;
     }
 
-   const nombreBase = `${Date.now()}-${user.id}`;
+ const nombreBase = `${Date.now()}-${userId}`;
 
     const rutaReloj = `reloj/${nombreBase}-${fotoReloj.name}`;
     const rutaPos = `pos/${nombreBase}-${fotoPos.name}`;
@@ -149,7 +141,7 @@ if (!user) {
     const insertResult = await supabase.from("cierres").insert([
       {
         fecha: fechaHoy,
-       chofer: user.email || "Chofer",
+      chofer: userEmail || "Chofer",
         movil,
         turno,
         km_inicio: Number(kmEntrada),
@@ -162,8 +154,8 @@ if (!user) {
         observaciones: "",
         foto_reloj_url: urlRelojData.data.publicUrl,
         foto_pos_url: urlPosData.data.publicUrl,
-       user_id: user.id,
-        cooperativa_id: profile.cooperativa_id,
+       user_id: userId,
+       cooperativa_id: cooperativaId,
       },
     ]);
 

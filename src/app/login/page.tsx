@@ -24,10 +24,14 @@ export default function LoginPage() {
     }
 
     const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", data.user.id)
-      .single();
+  .from("profiles")
+  .select("role, cooperativa_id")
+  .eq("id", data.user.id)
+  .single();
+
+localStorage.setItem("user_id", data.user.id);
+localStorage.setItem("user_email", data.user.email || "");
+localStorage.setItem("cooperativa_id", profile?.cooperativa_id || "");
 
     if (profile?.role === "admin") {
       router.push("/admin");
