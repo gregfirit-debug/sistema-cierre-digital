@@ -8,8 +8,6 @@ export default function NuevoCierrePage() {
   const [turno, setTurno] = useState("");
   const [kmEntrada, setKmEntrada] = useState("");
   const [kmSalida, setKmSalida] = useState("");
-  const [paso, setPaso] = useState(1);
-  const [mensaje, setMensaje] = useState("");
 
   const [totalReloj, setTotalReloj] = useState("");
   const [totalPos, setTotalPos] = useState("");
@@ -20,6 +18,9 @@ export default function NuevoCierrePage() {
 
   const [previewReloj, setPreviewReloj] = useState("");
   const [previewPos, setPreviewPos] = useState("");
+
+  const [paso, setPaso] = useState(1);
+  const [mensaje, setMensaje] = useState("");
 
   const relojInputRef = useRef<HTMLInputElement>(null);
   const posInputRef = useRef<HTMLInputElement>(null);
@@ -37,106 +38,32 @@ export default function NuevoCierrePage() {
     setPreviewReloj("");
     setPreviewPos("");
     setPaso(1);
+    setMensaje("");
   };
 
-const handleGuardarCierre = async () => {
-  setMensaje("Guardando...");
+  const handleContinuarPaso1 = () => {
+    setMensaje("");
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    if (!movil || !turno || !kmEntrada || !kmSalida) {
+      setMensaje("Completa todos los campos");
+      return;
+    }
 
-  if (!session?.user) {
-    setMensaje("No hay usuario logueado");
-    return;
-  }
+    const kmIn = Number(kmEntrada);
+    const kmOut = Number(kmSalida);
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("cooperativa_id")
-    .eq("id", session.user.id)
-    .single();
+    if (Number.isNaN(kmIn) || Number.isNaN(kmOut)) {
+      setMensaje("Los kilómetros deben ser números");
+      return;
+    }
 
-  if (!profile) {
-    setMensaje("No se encontró el profile");
-    return;
-  }
+    if (kmOut <= kmIn) {
+      setMensaje("Km salida debe ser mayor que Km entrada");
+      return;
+    }
 
-  if (!fotoReloj || !fotoPos) {
-    setMensaje("Faltan fotos");
-    return;
-  }
-
-  const nombreBase = `${Date.now()}-${session.user.id}`;
-
-  const rutaReloj = `reloj/${nombreBase}-${fotoReloj.name}`;
-  const rutaPos = `pos/${nombreBase}-${fotoPos.name}`;
-
-  const { error: errorFotoReloj } = await supabase.storage
-    .from("cierres")
-    .upload(rutaReloj, fotoReloj);
-
-  if (errorFotoReloj) {
-    setMensaje("Error subiendo foto del reloj");
-    return;
-  }
-
-  const { error: errorFotoPos } = await supabase.storage
-    .from("cierres")
-    .upload(rutaPos, fotoPos);
-
-  if (errorFotoPos) {
-    setMensaje("Error subiendo foto del POS");
-    return;
-  }
-
-  const { data: urlRelojData } = supabase.storage
-    .from("cierres")
-    .getPublicUrl(rutaReloj);
-
-  const { data: urlPosData } = supabase.storage
-    .from("cierres")
-    .getPublicUrl(rutaPos);
-
-  const kmTotalCalculado =
-    (Number(kmSalida) || 0) - (Number(kmEntrada) || 0);
-
-  const totalEntregarCalculado =
-    (Number(totalReloj) || 0) +
-    (Number(totalPos) || 0) -
-    (Number(gastos) || 0);
-
-  const fechaHoy = new Date().toISOString().slice(0, 10);
-
-  const { error } = await supabase.from("cierres").insert([
-    {
-      fecha: fechaHoy,
-      chofer: session.user.email || "Chofer",
-      movil,
-      turno,
-      km_inicio: Number(kmEntrada),
-      km_fin: Number(kmSalida),
-      km_total: kmTotalCalculado,
-      total_reloj: Number(totalReloj),
-      total_tarjetas: Number(totalPos),
-      gastos: Number(gastos),
-      total_entregar: totalEntregarCalculado,
-      observaciones: "",
-      foto_reloj_url: urlRelojData.publicUrl,
-      foto_pos_url: urlPosData.publicUrl,
-      user_id: session.user.id,
-      cooperativa_id: profile.cooperativa_id,
-    },
-  ]);
-
-  if (error) {
-    setMensaje("Error al guardar cierre");
-    return;
-  }
-
-  setMensaje("Cierre guardado correctamente");
-  limpiarFormulario();
-};
+    setPaso(2);
+  };
 
   const handleContinuarPaso2 = () => {
     setMensaje("");
@@ -163,22 +90,21 @@ const handleGuardarCierre = async () => {
   const handleGuardarCierre = async () => {
     setMensaje("Guardando...");
 
-    const {
-  data: { session },
-} = await supabase.auth.getSession();
+    const sessionResult = await supabase.auth.getSession();
+    const session = sessionResult.data.session;
 
-if (!session?.user) {
-  setMensaje("No hay usuario logueado");
-  return;
-}
+    if (!session?.user) {
+      setMensaje("No hay usuario logueado");
+      return;
+    }
 
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("cooperativa_id")
       .eq("id", session.user.id)
       .single();
 
-    if (!profile) {
+    if (profileError || !profile) {
       setMensaje("No se encontró el profile");
       return;
     }
@@ -188,51 +114,42 @@ if (!session?.user) {
       return;
     }
 
-   const nombreBase = `${Date.now()}-${session.user.id}`;
+    const nombreBase = `${Date.now()}-${session.user.id}`;
 
     const rutaReloj = `reloj/${nombreBase}-${fotoReloj.name}`;
     const rutaPos = `pos/${nombreBase}-${fotoPos.name}`;
 
-    const { error: errorFotoReloj } = await supabase.storage
+    const subidaReloj = await supabase.storage
       .from("cierres")
       .upload(rutaReloj, fotoReloj);
 
-    if (errorFotoReloj) {
+    if (subidaReloj.error) {
       setMensaje("Error subiendo foto del reloj");
       return;
     }
 
-    const { error: errorFotoPos } = await supabase.storage
+    const subidaPos = await supabase.storage
       .from("cierres")
       .upload(rutaPos, fotoPos);
 
-    if (errorFotoPos) {
+    if (subidaPos.error) {
       setMensaje("Error subiendo foto del POS");
       return;
     }
 
-    const { data: urlRelojData } = supabase.storage
-      .from("cierres")
-      .getPublicUrl(rutaReloj);
+    const urlRelojData = supabase.storage.from("cierres").getPublicUrl(rutaReloj);
+    const urlPosData = supabase.storage.from("cierres").getPublicUrl(rutaPos);
 
-    const { data: urlPosData } = supabase.storage
-      .from("cierres")
-      .getPublicUrl(rutaPos);
-
-    const kmTotalCalculado =
-      (Number(kmSalida) || 0) - (Number(kmEntrada) || 0);
-
+    const kmTotalCalculado = Number(kmSalida) - Number(kmEntrada);
     const totalEntregarCalculado =
-      (Number(totalReloj) || 0) +
-      (Number(totalPos) || 0) -
-      (Number(gastos) || 0);
+      Number(totalReloj) + Number(totalPos) - Number(gastos);
 
     const fechaHoy = new Date().toISOString().slice(0, 10);
 
-    const { error } = await supabase.from("cierres").insert([
+    const insertResult = await supabase.from("cierres").insert([
       {
         fecha: fechaHoy,
-      chofer: session.user.email || "Chofer",
+        chofer: session.user.email || "Chofer",
         movil,
         turno,
         km_inicio: Number(kmEntrada),
@@ -243,30 +160,28 @@ if (!session?.user) {
         gastos: Number(gastos),
         total_entregar: totalEntregarCalculado,
         observaciones: "",
-        foto_reloj_url: urlRelojData.publicUrl,
-        foto_pos_url: urlPosData.publicUrl,
-       user_id: session.user.id,
+        foto_reloj_url: urlRelojData.data.publicUrl,
+        foto_pos_url: urlPosData.data.publicUrl,
+        user_id: session.user.id,
         cooperativa_id: profile.cooperativa_id,
       },
     ]);
 
-    if (error) {
+    if (insertResult.error) {
       setMensaje("Error al guardar cierre");
       return;
     }
 
-    setMensaje("Cierre guardado correctamente");
     limpiarFormulario();
+    setMensaje("Cierre guardado correctamente");
   };
 
   if (paso === 4) {
     const totalEntregar =
-      (Number(totalReloj) || 0) +
-      (Number(totalPos) || 0) -
-      (Number(gastos) || 0);
+      Number(totalReloj) + Number(totalPos) - Number(gastos);
 
     return (
-      <main className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <main className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
         <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg p-6">
           <h1 className="text-xl font-bold mb-6 text-center">
             Revisar y confirmar
@@ -275,8 +190,8 @@ if (!session?.user) {
           <div className="space-y-3 text-sm">
             <p><strong>Móvil:</strong> {movil}</p>
             <p><strong>Turno:</strong> {turno}</p>
-            <p><strong>Km Entrada:</strong> {kmEntrada}</p>
-            <p><strong>Km Salida:</strong> {kmSalida}</p>
+            <p><strong>Km entrada:</strong> {kmEntrada}</p>
+            <p><strong>Km salida:</strong> {kmSalida}</p>
             <p><strong>Total reloj:</strong> {totalReloj}</p>
             <p><strong>Total POS:</strong> {totalPos}</p>
             <p><strong>Gastos:</strong> {gastos}</p>
@@ -315,7 +230,7 @@ if (!session?.user) {
 
   if (paso === 3) {
     return (
-      <main className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <main className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
         <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg p-6">
           <h1 className="text-xl font-bold mb-6 text-center">
             Fotos de respaldo
@@ -347,7 +262,11 @@ if (!session?.user) {
               </button>
 
               {previewReloj && (
-                <img src={previewReloj} className="mt-2 rounded-xl" />
+                <img
+                  src={previewReloj}
+                  alt="Preview reloj"
+                  className="mt-2 rounded-xl w-full"
+                />
               )}
             </div>
 
@@ -376,7 +295,11 @@ if (!session?.user) {
               </button>
 
               {previewPos && (
-                <img src={previewPos} className="mt-2 rounded-xl" />
+                <img
+                  src={previewPos}
+                  alt="Preview POS"
+                  className="mt-2 rounded-xl w-full"
+                />
               )}
             </div>
 
@@ -407,7 +330,7 @@ if (!session?.user) {
 
   if (paso === 2) {
     return (
-      <main className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <main className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
         <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg p-6">
           <h1 className="text-xl font-bold mb-6 text-center">Recaudación</h1>
 
@@ -418,12 +341,14 @@ if (!session?.user) {
               placeholder="Total reloj"
               className="w-full border p-3 rounded-xl"
             />
+
             <input
               value={totalPos}
               onChange={(e) => setTotalPos(e.target.value)}
               placeholder="Total POS"
               className="w-full border p-3 rounded-xl"
             />
+
             <input
               value={gastos}
               onChange={(e) => setGastos(e.target.value)}
@@ -457,7 +382,7 @@ if (!session?.user) {
   }
 
   return (
-    <main className="min-h-screen bg-gray-100 flex items-center justify-center">
+    <main className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg p-6">
         <h1 className="text-xl font-bold mb-6 text-center">
           Inicio del Cierre
@@ -470,6 +395,7 @@ if (!session?.user) {
             placeholder="Móvil"
             className="w-full border p-3 rounded-xl"
           />
+
           <select
             value={turno}
             onChange={(e) => setTurno(e.target.value)}
@@ -479,12 +405,14 @@ if (!session?.user) {
             <option value="diurno">Diurno</option>
             <option value="nocturno">Nocturno</option>
           </select>
+
           <input
             value={kmEntrada}
             onChange={(e) => setKmEntrada(e.target.value)}
             placeholder="Km entrada"
             className="w-full border p-3 rounded-xl"
           />
+
           <input
             value={kmSalida}
             onChange={(e) => setKmSalida(e.target.value)}
