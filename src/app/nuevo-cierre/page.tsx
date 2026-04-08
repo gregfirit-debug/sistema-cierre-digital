@@ -14,6 +14,9 @@ export default function NuevoCierrePage() {
   const [totalPos, setTotalPos] = useState("");
   const [gastos, setGastos] = useState("");
 
+  const [fotoReloj, setFotoReloj] = useState<File | null>(null);
+  const [fotoPos, setFotoPos] = useState<File | null>(null);
+
   const handleContinuarPaso1 = () => {
     setMensaje("");
 
@@ -33,8 +36,71 @@ export default function NuevoCierrePage() {
       return;
     }
 
-    alert("Paso 2 completo");
+    setPaso(3);
   };
+
+  const handleContinuarPaso3 = () => {
+    setMensaje("");
+
+    if (!fotoReloj || !fotoPos) {
+      setMensaje("Debes cargar ambas fotos");
+      return;
+    }
+
+    alert("Paso 3 completo");
+  };
+
+  if (paso === 3) {
+    return (
+      <main className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg p-6">
+          <h1 className="text-xl font-bold mb-6 text-center">
+            Fotos de respaldo
+          </h1>
+
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm text-gray-500">Foto del reloj</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setFotoReloj(e.target.files?.[0] || null)}
+                className="w-full border rounded-xl p-3 mt-1"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm text-gray-500">Foto del POS</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setFotoPos(e.target.files?.[0] || null)}
+                className="w-full border rounded-xl p-3 mt-1"
+              />
+            </div>
+
+            <button
+              onClick={handleContinuarPaso3}
+              className="w-full bg-yellow-400 text-black font-semibold p-3 rounded-xl mt-4"
+            >
+              CONTINUAR
+            </button>
+
+            <button
+              onClick={() => setPaso(2)}
+              className="w-full bg-black text-white font-semibold p-3 rounded-xl"
+            >
+              VOLVER
+            </button>
+
+            {mensaje && (
+              <p className="text-center text-red-500 text-sm">{mensaje}</p>
+            )}
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   if (paso === 2) {
     return (
