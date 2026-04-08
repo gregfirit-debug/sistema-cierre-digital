@@ -16,8 +16,10 @@ export default function NuevoCierrePage() {
 
   const [fotoReloj, setFotoReloj] = useState<File | null>(null);
   const [fotoPos, setFotoPos] = useState<File | null>(null);
-const [previewReloj, setPreviewReloj] = useState("");
-const [previewPos, setPreviewPos] = useState("");
+
+  const [previewReloj, setPreviewReloj] = useState("");
+  const [previewPos, setPreviewPos] = useState("");
+
   const relojInputRef = useRef<HTMLInputElement>(null);
   const posInputRef = useRef<HTMLInputElement>(null);
 
@@ -51,8 +53,56 @@ const [previewPos, setPreviewPos] = useState("");
       return;
     }
 
-    alert("Paso 3 completo");
+    setPaso(4);
   };
+
+  if (paso === 4) {
+    const totalEntregar =
+      (Number(totalReloj) || 0) +
+      (Number(totalPos) || 0) -
+      (Number(gastos) || 0);
+
+    return (
+      <main className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg p-6">
+          <h1 className="text-xl font-bold mb-6 text-center">
+            Revisar y confirmar
+          </h1>
+
+          <div className="space-y-3 text-sm">
+            <p><strong>Móvil:</strong> {movil}</p>
+            <p><strong>Turno:</strong> {turno}</p>
+            <p><strong>Km Entrada:</strong> {kmEntrada}</p>
+            <p><strong>Km Salida:</strong> {kmSalida}</p>
+            <p><strong>Total reloj:</strong> {totalReloj}</p>
+            <p><strong>Total POS:</strong> {totalPos}</p>
+            <p><strong>Gastos:</strong> {gastos}</p>
+
+            <div className="bg-green-100 p-4 rounded-xl mt-2">
+              <p className="text-gray-600">Total a entregar</p>
+              <p className="text-2xl font-bold text-green-700">
+                ${totalEntregar}
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => alert("Luego guardamos en base de datos")}
+            className="w-full bg-yellow-400 text-black font-semibold p-3 rounded-xl mt-6"
+          >
+            CONFIRMAR CIERRE
+          </button>
+
+          <button
+            onClick={() => setPaso(3)}
+            className="w-full border border-black text-black font-semibold p-3 rounded-xl mt-3"
+          >
+            VOLVER
+          </button>
+        </div>
+      </main>
+    );
+  }
 
   if (paso === 3) {
     return (
@@ -72,10 +122,10 @@ const [previewPos, setPreviewPos] = useState("");
                 accept="image/*"
                 capture="environment"
                 onChange={(e) => {
-  const file = e.target.files?.[0] || null;
-  setFotoReloj(file);
-  setPreviewReloj(file ? URL.createObjectURL(file) : "");
-}}
+                  const file = e.target.files?.[0] || null;
+                  setFotoReloj(file);
+                  setPreviewReloj(file ? URL.createObjectURL(file) : "");
+                }}
                 className="hidden"
               />
 
@@ -87,16 +137,9 @@ const [previewPos, setPreviewPos] = useState("");
                 TOMAR FOTO DEL RELOJ
               </button>
 
-              {fotoReloj && (
-                <p className="text-xs text-green-600 mt-2">{fotoReloj.name}</p>
+              {previewReloj && (
+                <img src={previewReloj} className="mt-2 rounded-xl" />
               )}
-             {previewReloj && (
-  <img
-    src={previewReloj}
-    alt="Preview reloj"
-    className="mt-2 w-full rounded-xl border"
-  />
-)} 
             </div>
 
             <div>
@@ -107,11 +150,11 @@ const [previewPos, setPreviewPos] = useState("");
                 type="file"
                 accept="image/*"
                 capture="environment"
-               onChange={(e) => {
-  const file = e.target.files?.[0] || null;
-  setFotoPos(file);
-  setPreviewPos(file ? URL.createObjectURL(file) : "");
-}}
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null;
+                  setFotoPos(file);
+                  setPreviewPos(file ? URL.createObjectURL(file) : "");
+                }}
                 className="hidden"
               />
 
@@ -123,30 +166,21 @@ const [previewPos, setPreviewPos] = useState("");
                 TOMAR FOTO DEL POS
               </button>
 
-              {fotoPos && (
-                <p className="text-xs text-green-600 mt-2">{fotoPos.name}</p>
+              {previewPos && (
+                <img src={previewPos} className="mt-2 rounded-xl" />
               )}
-             {previewPos && (
-  <img
-    src={previewPos}
-    alt="Preview POS"
-    className="mt-2 w-full rounded-xl border"
-  />
-)} 
             </div>
 
             <button
-              type="button"
               onClick={handleContinuarPaso3}
-              className="w-full bg-black text-white font-semibold p-3 rounded-xl mt-4"
+              className="w-full bg-black text-white p-3 rounded-xl"
             >
               CONTINUAR
             </button>
 
             <button
-              type="button"
               onClick={() => setPaso(2)}
-              className="w-full border border-black text-black font-semibold p-3 rounded-xl"
+              className="w-full border border-black p-3 rounded-xl"
             >
               VOLVER
             </button>
@@ -167,52 +201,19 @@ const [previewPos, setPreviewPos] = useState("");
           <h1 className="text-xl font-bold mb-6 text-center">Recaudación</h1>
 
           <div className="space-y-4">
-            <div>
-              <label className="text-sm text-gray-500">Total reloj</label>
-              <input
-                value={totalReloj}
-                onChange={(e) => setTotalReloj(e.target.value)}
-                className="w-full border rounded-xl p-3 mt-1"
-              />
-            </div>
+            <input value={totalReloj} onChange={(e) => setTotalReloj(e.target.value)} placeholder="Total reloj" className="w-full border p-3 rounded-xl"/>
+            <input value={totalPos} onChange={(e) => setTotalPos(e.target.value)} placeholder="Total POS" className="w-full border p-3 rounded-xl"/>
+            <input value={gastos} onChange={(e) => setGastos(e.target.value)} placeholder="Gastos" className="w-full border p-3 rounded-xl"/>
 
-            <div>
-              <label className="text-sm text-gray-500">Total POS</label>
-              <input
-                value={totalPos}
-                onChange={(e) => setTotalPos(e.target.value)}
-                className="w-full border rounded-xl p-3 mt-1"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm text-gray-500">Gastos</label>
-              <input
-                value={gastos}
-                onChange={(e) => setGastos(e.target.value)}
-                className="w-full border rounded-xl p-3 mt-1"
-              />
-            </div>
-
-            <button
-              type="button"
-              onClick={handleContinuarPaso2}
-              className="w-full bg-yellow-400 text-black font-semibold p-3 rounded-xl mt-4"
-            >
+            <button onClick={handleContinuarPaso2} className="w-full bg-yellow-400 p-3 rounded-xl">
               CONTINUAR
             </button>
 
-            <button
-              type="button"
-              onClick={() => setPaso(1)}
-              className="w-full bg-black text-white font-semibold p-3 rounded-xl"
-            >
+            <button onClick={() => setPaso(1)} className="w-full border p-3 rounded-xl">
               VOLVER
             </button>
 
-            {mensaje && (
-              <p className="text-center text-red-500 text-sm">{mensaje}</p>
-            )}
+            {mensaje && <p className="text-red-500 text-sm text-center">{mensaje}</p>}
           </div>
         </div>
       </main>
@@ -222,62 +223,23 @@ const [previewPos, setPreviewPos] = useState("");
   return (
     <main className="min-h-screen bg-gray-100 flex items-center justify-center">
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg p-6">
-        <h1 className="text-xl font-bold mb-6 text-center">
-          Inicio del Cierre
-        </h1>
+        <h1 className="text-xl font-bold mb-6 text-center">Inicio del Cierre</h1>
 
         <div className="space-y-4">
-          <div>
-            <label className="text-sm text-gray-500">Móvil</label>
-            <input
-              value={movil}
-              onChange={(e) => setMovil(e.target.value)}
-              className="w-full border rounded-xl p-3 mt-1"
-            />
-          </div>
+          <input value={movil} onChange={(e) => setMovil(e.target.value)} placeholder="Móvil" className="w-full border p-3 rounded-xl"/>
+          <select value={turno} onChange={(e) => setTurno(e.target.value)} className="w-full border p-3 rounded-xl">
+            <option value="">Turno</option>
+            <option value="diurno">Diurno</option>
+            <option value="nocturno">Nocturno</option>
+          </select>
+          <input value={kmEntrada} onChange={(e) => setKmEntrada(e.target.value)} placeholder="Km entrada" className="w-full border p-3 rounded-xl"/>
+          <input value={kmSalida} onChange={(e) => setKmSalida(e.target.value)} placeholder="Km salida" className="w-full border p-3 rounded-xl"/>
 
-          <div>
-            <label className="text-sm text-gray-500">Turno</label>
-            <select
-              value={turno}
-              onChange={(e) => setTurno(e.target.value)}
-              className="w-full border rounded-xl p-3 mt-1"
-            >
-              <option value="">Seleccionar</option>
-              <option value="diurno">Diurno</option>
-              <option value="nocturno">Nocturno</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="text-sm text-gray-500">Km Entrada</label>
-            <input
-              value={kmEntrada}
-              onChange={(e) => setKmEntrada(e.target.value)}
-              className="w-full border rounded-xl p-3 mt-1"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm text-gray-500">Km Salida</label>
-            <input
-              value={kmSalida}
-              onChange={(e) => setKmSalida(e.target.value)}
-              className="w-full border rounded-xl p-3 mt-1"
-            />
-          </div>
-
-          <button
-            type="button"
-            onClick={handleContinuarPaso1}
-            className="w-full bg-yellow-400 text-black font-semibold p-3 rounded-xl mt-4"
-          >
+          <button onClick={handleContinuarPaso1} className="w-full bg-yellow-400 p-3 rounded-xl">
             CONTINUAR
           </button>
 
-          {mensaje && (
-            <p className="text-center text-red-500 text-sm">{mensaje}</p>
-          )}
+          {mensaje && <p className="text-red-500 text-sm text-center">{mensaje}</p>}
         </div>
       </div>
     </main>
