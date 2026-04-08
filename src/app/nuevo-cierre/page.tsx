@@ -21,28 +21,47 @@ export default function NuevoCierrePage() {
     setPaso(2);
   };
 
-  if (paso === 2) {
-    return (
-      <main className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg p-6">
-          <h1 className="text-xl font-bold mb-6 text-center">
-            Paso 2
-          </h1>
+ if (paso === 2) {
+  return (
+    <main className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg p-6">
+        <h1 className="text-xl font-bold mb-6 text-center">
+          Recaudación
+        </h1>
 
-          <p className="text-center text-gray-600 mb-4">
-            Aquí sigue la carga del cierre.
-          </p>
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm text-gray-500">Total reloj</label>
+            <input className="w-full border rounded-xl p-3 mt-1" />
+          </div>
+
+          <div>
+            <label className="text-sm text-gray-500">Total POS</label>
+            <input className="w-full border rounded-xl p-3 mt-1" />
+          </div>
+
+          <div>
+            <label className="text-sm text-gray-500">Gastos</label>
+            <input className="w-full border rounded-xl p-3 mt-1" />
+          </div>
+
+          <button
+            className="w-full bg-yellow-400 text-black font-semibold p-3 rounded-xl mt-4"
+          >
+            CONTINUAR
+          </button>
 
           <button
             onClick={() => setPaso(1)}
             className="w-full bg-black text-white font-semibold p-3 rounded-xl"
           >
-            Volver
+            VOLVER
           </button>
         </div>
-      </main>
-    );
-  }
+      </div>
+    </main>
+  );
+}
 
   return (
     <main className="min-h-screen bg-gray-100 flex items-center justify-center">
