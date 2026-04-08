@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function NuevoCierrePage() {
   const [movil, setMovil] = useState("");
@@ -22,6 +23,21 @@ export default function NuevoCierrePage() {
 
   const relojInputRef = useRef<HTMLInputElement>(null);
   const posInputRef = useRef<HTMLInputElement>(null);
+
+  const limpiarFormulario = () => {
+    setMovil("");
+    setTurno("");
+    setKmEntrada("");
+    setKmSalida("");
+    setTotalReloj("");
+    setTotalPos("");
+    setGastos("");
+    setFotoReloj(null);
+    setFotoPos(null);
+    setPreviewReloj("");
+    setPreviewPos("");
+    setPaso(1);
+  };
 
   const handleContinuarPaso1 = () => {
     setMensaje("");
@@ -56,6 +72,103 @@ export default function NuevoCierrePage() {
     setPaso(4);
   };
 
+  const handleGuardarCierre = async () => {
+    setMensaje("Guardando...");
+
+    const { data: userData } = await supabase.auth.getUser();
+
+    if (!userData.user) {
+      setMensaje("No hay usuario logueado");
+      return;
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("cooperativa_id")
+      .eq("id", userData.user.id)
+      .single();
+
+    if (!profile) {
+      setMensaje("No se encontró el profile");
+      return;
+    }
+
+    if (!fotoReloj || !fotoPos) {
+      setMensaje("Faltan fotos");
+      return;
+    }
+
+    const nombreBase = `${Date.now()}-${userData.user.id}`;
+
+    const rutaReloj = `reloj/${nombreBase}-${fotoReloj.name}`;
+    const rutaPos = `pos/${nombreBase}-${fotoPos.name}`;
+
+    const { error: errorFotoReloj } = await supabase.storage
+      .from("cierres")
+      .upload(rutaReloj, fotoReloj);
+
+    if (errorFotoReloj) {
+      setMensaje("Error subiendo foto del reloj");
+      return;
+    }
+
+    const { error: errorFotoPos } = await supabase.storage
+      .from("cierres")
+      .upload(rutaPos, fotoPos);
+
+    if (errorFotoPos) {
+      setMensaje("Error subiendo foto del POS");
+      return;
+    }
+
+    const { data: urlRelojData } = supabase.storage
+      .from("cierres")
+      .getPublicUrl(rutaReloj);
+
+    const { data: urlPosData } = supabase.storage
+      .from("cierres")
+      .getPublicUrl(rutaPos);
+
+    const kmTotalCalculado =
+      (Number(kmSalida) || 0) - (Number(kmEntrada) || 0);
+
+    const totalEntregarCalculado =
+      (Number(totalReloj) || 0) +
+      (Number(totalPos) || 0) -
+      (Number(gastos) || 0);
+
+    const fechaHoy = new Date().toISOString().slice(0, 10);
+
+    const { error } = await supabase.from("cierres").insert([
+      {
+        fecha: fechaHoy,
+        chofer: userData.user.email || "Chofer",
+        movil,
+        turno,
+        km_inicio: Number(kmEntrada),
+        km_fin: Number(kmSalida),
+        km_total: kmTotalCalculado,
+        total_reloj: Number(totalReloj),
+        total_tarjetas: Number(totalPos),
+        gastos: Number(gastos),
+        total_entregar: totalEntregarCalculado,
+        observaciones: "",
+        foto_reloj_url: urlRelojData.publicUrl,
+        foto_pos_url: urlPosData.publicUrl,
+        user_id: userData.user.id,
+        cooperativa_id: profile.cooperativa_id,
+      },
+    ]);
+
+    if (error) {
+      setMensaje("Error al guardar cierre");
+      return;
+    }
+
+    setMensaje("Cierre guardado correctamente");
+    limpiarFormulario();
+  };
+
   if (paso === 4) {
     const totalEntregar =
       (Number(totalReloj) || 0) +
@@ -87,18 +200,24 @@ export default function NuevoCierrePage() {
           </div>
 
           <button
-            onClick={() => alert("Luego guardamos en base de datos")}
+            type="button"
+            onClick={handleGuardarCierre}
             className="w-full bg-yellow-400 text-black font-semibold p-3 rounded-xl mt-6"
           >
             CONFIRMAR CIERRE
           </button>
 
           <button
+            type="button"
             onClick={() => setPaso(3)}
             className="w-full border border-black text-black font-semibold p-3 rounded-xl mt-3"
           >
             VOLVER
           </button>
+
+          {mensaje && (
+            <p className="text-center text-sm mt-3">{mensaje}</p>
+          )}
         </div>
       </main>
     );
@@ -172,7 +291,7 @@ export default function NuevoCierrePage() {
             </div>
 
             <button
-            type="button"
+              type="button"
               onClick={handleContinuarPaso3}
               className="w-full bg-black text-white p-3 rounded-xl"
             >
@@ -180,6 +299,7 @@ export default function NuevoCierrePage() {
             </button>
 
             <button
+              type="button"
               onClick={() => setPaso(2)}
               className="w-full border border-black p-3 rounded-xl"
             >
@@ -202,19 +322,44 @@ export default function NuevoCierrePage() {
           <h1 className="text-xl font-bold mb-6 text-center">Recaudación</h1>
 
           <div className="space-y-4">
-            <input value={totalReloj} onChange={(e) => setTotalReloj(e.target.value)} placeholder="Total reloj" className="w-full border p-3 rounded-xl"/>
-            <input value={totalPos} onChange={(e) => setTotalPos(e.target.value)} placeholder="Total POS" className="w-full border p-3 rounded-xl"/>
-            <input value={gastos} onChange={(e) => setGastos(e.target.value)} placeholder="Gastos" className="w-full border p-3 rounded-xl"/>
+            <input
+              value={totalReloj}
+              onChange={(e) => setTotalReloj(e.target.value)}
+              placeholder="Total reloj"
+              className="w-full border p-3 rounded-xl"
+            />
+            <input
+              value={totalPos}
+              onChange={(e) => setTotalPos(e.target.value)}
+              placeholder="Total POS"
+              className="w-full border p-3 rounded-xl"
+            />
+            <input
+              value={gastos}
+              onChange={(e) => setGastos(e.target.value)}
+              placeholder="Gastos"
+              className="w-full border p-3 rounded-xl"
+            />
 
-            <button onClick={handleContinuarPaso2} className="w-full bg-yellow-400 p-3 rounded-xl">
+            <button
+              type="button"
+              onClick={handleContinuarPaso2}
+              className="w-full bg-yellow-400 p-3 rounded-xl"
+            >
               CONTINUAR
             </button>
 
-            <button onClick={() => setPaso(1)} className="w-full border p-3 rounded-xl">
+            <button
+              type="button"
+              onClick={() => setPaso(1)}
+              className="w-full border p-3 rounded-xl"
+            >
               VOLVER
             </button>
 
-            {mensaje && <p className="text-red-500 text-sm text-center">{mensaje}</p>}
+            {mensaje && (
+              <p className="text-red-500 text-sm text-center">{mensaje}</p>
+            )}
           </div>
         </div>
       </main>
@@ -224,23 +369,50 @@ export default function NuevoCierrePage() {
   return (
     <main className="min-h-screen bg-gray-100 flex items-center justify-center">
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg p-6">
-        <h1 className="text-xl font-bold mb-6 text-center">Inicio del Cierre</h1>
+        <h1 className="text-xl font-bold mb-6 text-center">
+          Inicio del Cierre
+        </h1>
 
         <div className="space-y-4">
-          <input value={movil} onChange={(e) => setMovil(e.target.value)} placeholder="Móvil" className="w-full border p-3 rounded-xl"/>
-          <select value={turno} onChange={(e) => setTurno(e.target.value)} className="w-full border p-3 rounded-xl">
+          <input
+            value={movil}
+            onChange={(e) => setMovil(e.target.value)}
+            placeholder="Móvil"
+            className="w-full border p-3 rounded-xl"
+          />
+          <select
+            value={turno}
+            onChange={(e) => setTurno(e.target.value)}
+            className="w-full border p-3 rounded-xl"
+          >
             <option value="">Turno</option>
             <option value="diurno">Diurno</option>
             <option value="nocturno">Nocturno</option>
           </select>
-          <input value={kmEntrada} onChange={(e) => setKmEntrada(e.target.value)} placeholder="Km entrada" className="w-full border p-3 rounded-xl"/>
-          <input value={kmSalida} onChange={(e) => setKmSalida(e.target.value)} placeholder="Km salida" className="w-full border p-3 rounded-xl"/>
+          <input
+            value={kmEntrada}
+            onChange={(e) => setKmEntrada(e.target.value)}
+            placeholder="Km entrada"
+            className="w-full border p-3 rounded-xl"
+          />
+          <input
+            value={kmSalida}
+            onChange={(e) => setKmSalida(e.target.value)}
+            placeholder="Km salida"
+            className="w-full border p-3 rounded-xl"
+          />
 
-          <button onClick={handleContinuarPaso1} className="w-full bg-yellow-400 p-3 rounded-xl">
+          <button
+            type="button"
+            onClick={handleContinuarPaso1}
+            className="w-full bg-yellow-400 p-3 rounded-xl"
+          >
             CONTINUAR
           </button>
 
-          {mensaje && <p className="text-red-500 text-sm text-center">{mensaje}</p>}
+          {mensaje && (
+            <p className="text-red-500 text-sm text-center">{mensaje}</p>
+          )}
         </div>
       </div>
     </main>
