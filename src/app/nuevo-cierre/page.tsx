@@ -16,7 +16,8 @@ export default function NuevoCierrePage() {
 
   const [fotoReloj, setFotoReloj] = useState<File | null>(null);
   const [fotoPos, setFotoPos] = useState<File | null>(null);
-
+const [previewReloj, setPreviewReloj] = useState("");
+const [previewPos, setPreviewPos] = useState("");
   const relojInputRef = useRef<HTMLInputElement>(null);
   const posInputRef = useRef<HTMLInputElement>(null);
 
@@ -70,7 +71,11 @@ export default function NuevoCierrePage() {
                 type="file"
                 accept="image/*"
                 capture="environment"
-                onChange={(e) => setFotoReloj(e.target.files?.[0] || null)}
+                onChange={(e) => {
+  const file = e.target.files?.[0] || null;
+  setFotoReloj(file);
+  setPreviewReloj(file ? URL.createObjectURL(file) : "");
+}}
                 className="hidden"
               />
 
@@ -85,6 +90,13 @@ export default function NuevoCierrePage() {
               {fotoReloj && (
                 <p className="text-xs text-green-600 mt-2">{fotoReloj.name}</p>
               )}
+             {previewReloj && (
+  <img
+    src={previewReloj}
+    alt="Preview reloj"
+    className="mt-2 w-full rounded-xl border"
+  />
+)} 
             </div>
 
             <div>
@@ -95,7 +107,11 @@ export default function NuevoCierrePage() {
                 type="file"
                 accept="image/*"
                 capture="environment"
-                onChange={(e) => setFotoPos(e.target.files?.[0] || null)}
+               onChange={(e) => {
+  const file = e.target.files?.[0] || null;
+  setFotoPos(file);
+  setPreviewPos(file ? URL.createObjectURL(file) : "");
+}}
                 className="hidden"
               />
 
@@ -110,6 +126,13 @@ export default function NuevoCierrePage() {
               {fotoPos && (
                 <p className="text-xs text-green-600 mt-2">{fotoPos.name}</p>
               )}
+             {previewPos && (
+  <img
+    src={previewPos}
+    alt="Preview POS"
+    className="mt-2 w-full rounded-xl border"
+  />
+)} 
             </div>
 
             <button
