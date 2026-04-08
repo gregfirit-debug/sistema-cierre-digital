@@ -138,14 +138,16 @@ const { data, error } = await supabase
 )} 
 
         <div className="mb-4">
-          <input
-            type="text"
-            placeholder="Filtrar por móvil"
-            value={movilFiltro}
-            onChange={(e) => setMovilFiltro(e.target.value)}
-            className="w-full rounded border px-3 py-2"
-          />
-        </div>
+  <select
+    value={turnoFiltro}
+    onChange={(e) => setTurnoFiltro(e.target.value)}
+    className="w-full rounded border px-3 py-2"
+  >
+    <option value="">Filtrar por turno</option>
+    <option value="diurno">Diurno</option>
+    <option value="nocturno">Nocturno</option>
+  </select>
+</div>
 
         <div className="mb-4">
           <input
