@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
-
+import { useRouter } from "next/navigation";
 export default function NuevoCierrePage() {
   const [movil, setMovil] = useState("");
   const [turno, setTurno] = useState("");
@@ -21,7 +21,7 @@ export default function NuevoCierrePage() {
 
   const [paso, setPaso] = useState(1);
   const [mensaje, setMensaje] = useState("");
-
+const router = useRouter();
   const relojInputRef = useRef<HTMLInputElement>(null);
   const posInputRef = useRef<HTMLInputElement>(null);
 
@@ -89,7 +89,11 @@ export default function NuevoCierrePage() {
 
   const handleGuardarCierre = async () => {
     setMensaje("Guardando...");
-
+const handleLogout = async () => {
+  await supabase.auth.signOut();
+  localStorage.clear();
+  router.push("/login");
+};
   const userId = localStorage.getItem("user_id");
 const userEmail = localStorage.getItem("user_email");
 const cooperativaId = localStorage.getItem("cooperativa_id");
