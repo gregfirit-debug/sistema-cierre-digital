@@ -39,16 +39,104 @@ export default function NuevoCierrePage() {
     setPaso(1);
   };
 
-  const handleContinuarPaso1 = () => {
-    setMensaje("");
+const handleGuardarCierre = async () => {
+  setMensaje("Guardando...");
 
-    if (!movil || !turno || !kmEntrada || !kmSalida) {
-      setMensaje("Completa todos los campos");
-      return;
-    }
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
-    setPaso(2);
-  };
+  if (!session?.user) {
+    setMensaje("No hay usuario logueado");
+    return;
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("cooperativa_id")
+    .eq("id", session.user.id)
+    .single();
+
+  if (!profile) {
+    setMensaje("No se encontró el profile");
+    return;
+  }
+
+  if (!fotoReloj || !fotoPos) {
+    setMensaje("Faltan fotos");
+    return;
+  }
+
+  const nombreBase = `${Date.now()}-${session.user.id}`;
+
+  const rutaReloj = `reloj/${nombreBase}-${fotoReloj.name}`;
+  const rutaPos = `pos/${nombreBase}-${fotoPos.name}`;
+
+  const { error: errorFotoReloj } = await supabase.storage
+    .from("cierres")
+    .upload(rutaReloj, fotoReloj);
+
+  if (errorFotoReloj) {
+    setMensaje("Error subiendo foto del reloj");
+    return;
+  }
+
+  const { error: errorFotoPos } = await supabase.storage
+    .from("cierres")
+    .upload(rutaPos, fotoPos);
+
+  if (errorFotoPos) {
+    setMensaje("Error subiendo foto del POS");
+    return;
+  }
+
+  const { data: urlRelojData } = supabase.storage
+    .from("cierres")
+    .getPublicUrl(rutaReloj);
+
+  const { data: urlPosData } = supabase.storage
+    .from("cierres")
+    .getPublicUrl(rutaPos);
+
+  const kmTotalCalculado =
+    (Number(kmSalida) || 0) - (Number(kmEntrada) || 0);
+
+  const totalEntregarCalculado =
+    (Number(totalReloj) || 0) +
+    (Number(totalPos) || 0) -
+    (Number(gastos) || 0);
+
+  const fechaHoy = new Date().toISOString().slice(0, 10);
+
+  const { error } = await supabase.from("cierres").insert([
+    {
+      fecha: fechaHoy,
+      chofer: session.user.email || "Chofer",
+      movil,
+      turno,
+      km_inicio: Number(kmEntrada),
+      km_fin: Number(kmSalida),
+      km_total: kmTotalCalculado,
+      total_reloj: Number(totalReloj),
+      total_tarjetas: Number(totalPos),
+      gastos: Number(gastos),
+      total_entregar: totalEntregarCalculado,
+      observaciones: "",
+      foto_reloj_url: urlRelojData.publicUrl,
+      foto_pos_url: urlPosData.publicUrl,
+      user_id: session.user.id,
+      cooperativa_id: profile.cooperativa_id,
+    },
+  ]);
+
+  if (error) {
+    setMensaje("Error al guardar cierre");
+    return;
+  }
+
+  setMensaje("Cierre guardado correctamente");
+  limpiarFormulario();
+};
 
   const handleContinuarPaso2 = () => {
     setMensaje("");
