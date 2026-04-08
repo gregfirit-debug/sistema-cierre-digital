@@ -172,6 +172,7 @@ export default function NuevoCierrePage() {
             </div>
 
             <button
+            type="button"
               onClick={handleContinuarPaso3}
               className="w-full bg-black text-white p-3 rounded-xl"
             >
