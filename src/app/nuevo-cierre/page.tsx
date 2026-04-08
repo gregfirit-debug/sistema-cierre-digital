@@ -58,46 +58,63 @@ export default function NuevoCierrePage() {
             Fotos de respaldo
           </h1>
 
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm text-gray-500">Foto del reloj</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setFotoReloj(e.target.files?.[0] || null)}
-                className="w-full border rounded-xl p-3 mt-1"
-              />
-            </div>
+       <div className="space-y-4">
+  <div>
+    <label className="text-sm text-gray-500 block mb-2">Foto del reloj</label>
 
-            <div>
-              <label className="text-sm text-gray-500">Foto del POS</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setFotoPos(e.target.files?.[0] || null)}
-                className="w-full border rounded-xl p-3 mt-1"
-              />
-            </div>
+    <label className="w-full bg-yellow-400 text-black font-semibold p-3 rounded-xl block text-center cursor-pointer">
+      TOMAR FOTO DEL RELOJ
+      <input
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={(e) => setFotoReloj(e.target.files?.[0] || null)}
+        className="hidden"
+      />
+    </label>
 
-            <button
-              onClick={handleContinuarPaso3}
-              className="w-full bg-yellow-400 text-black font-semibold p-3 rounded-xl mt-4"
-            >
-              CONTINUAR
-            </button>
+    {fotoReloj && (
+      <p className="text-xs text-green-600 mt-2">{fotoReloj.name}</p>
+    )}
+  </div>
 
-            <button
-              onClick={() => setPaso(2)}
-              className="w-full bg-black text-white font-semibold p-3 rounded-xl"
-            >
-              VOLVER
-            </button>
+  <div>
+    <label className="text-sm text-gray-500 block mb-2">Foto del POS</label>
 
-            {mensaje && (
-              <p className="text-center text-red-500 text-sm">{mensaje}</p>
-            )}
-          </div>
-        </div>
+    <label className="w-full bg-yellow-400 text-black font-semibold p-3 rounded-xl block text-center cursor-pointer">
+      TOMAR FOTO DEL POS
+      <input
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={(e) => setFotoPos(e.target.files?.[0] || null)}
+        className="hidden"
+      />
+    </label>
+
+    {fotoPos && (
+      <p className="text-xs text-green-600 mt-2">{fotoPos.name}</p>
+    )}
+  </div>
+
+  <button
+    onClick={handleContinuarPaso3}
+    className="w-full bg-black text-white font-semibold p-3 rounded-xl mt-4"
+  >
+    CONTINUAR
+  </button>
+
+  <button
+    onClick={() => setPaso(2)}
+    className="w-full border border-black text-black font-semibold p-3 rounded-xl"
+  >
+    VOLVER
+  </button>
+
+  {mensaje && (
+    <p className="text-center text-red-500 text-sm">{mensaje}</p>
+  )}
+</div>   
       </main>
     );
   }
