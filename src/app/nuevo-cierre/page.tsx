@@ -10,7 +10,11 @@ export default function NuevoCierrePage() {
   const [paso, setPaso] = useState(1);
   const [mensaje, setMensaje] = useState("");
 
-  const handleContinuar = () => {
+  const [totalReloj, setTotalReloj] = useState("");
+  const [totalPos, setTotalPos] = useState("");
+  const [gastos, setGastos] = useState("");
+
+  const handleContinuarPaso1 = () => {
     setMensaje("");
 
     if (!movil || !turno || !kmEntrada || !kmSalida) {
@@ -21,47 +25,73 @@ export default function NuevoCierrePage() {
     setPaso(2);
   };
 
- if (paso === 2) {
-  return (
-    <main className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg p-6">
-        <h1 className="text-xl font-bold mb-6 text-center">
-          Recaudación
-        </h1>
+  const handleContinuarPaso2 = () => {
+    setMensaje("");
 
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm text-gray-500">Total reloj</label>
-            <input className="w-full border rounded-xl p-3 mt-1" />
+    if (!totalReloj || !totalPos || !gastos) {
+      setMensaje("Completa todos los campos");
+      return;
+    }
+
+    alert("Paso 2 completo");
+  };
+
+  if (paso === 2) {
+    return (
+      <main className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg p-6">
+          <h1 className="text-xl font-bold mb-6 text-center">Recaudación</h1>
+
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm text-gray-500">Total reloj</label>
+              <input
+                value={totalReloj}
+                onChange={(e) => setTotalReloj(e.target.value)}
+                className="w-full border rounded-xl p-3 mt-1"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm text-gray-500">Total POS</label>
+              <input
+                value={totalPos}
+                onChange={(e) => setTotalPos(e.target.value)}
+                className="w-full border rounded-xl p-3 mt-1"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm text-gray-500">Gastos</label>
+              <input
+                value={gastos}
+                onChange={(e) => setGastos(e.target.value)}
+                className="w-full border rounded-xl p-3 mt-1"
+              />
+            </div>
+
+            <button
+              onClick={handleContinuarPaso2}
+              className="w-full bg-yellow-400 text-black font-semibold p-3 rounded-xl mt-4"
+            >
+              CONTINUAR
+            </button>
+
+            <button
+              onClick={() => setPaso(1)}
+              className="w-full bg-black text-white font-semibold p-3 rounded-xl"
+            >
+              VOLVER
+            </button>
+
+            {mensaje && (
+              <p className="text-center text-red-500 text-sm">{mensaje}</p>
+            )}
           </div>
-
-          <div>
-            <label className="text-sm text-gray-500">Total POS</label>
-            <input className="w-full border rounded-xl p-3 mt-1" />
-          </div>
-
-          <div>
-            <label className="text-sm text-gray-500">Gastos</label>
-            <input className="w-full border rounded-xl p-3 mt-1" />
-          </div>
-
-          <button
-            className="w-full bg-yellow-400 text-black font-semibold p-3 rounded-xl mt-4"
-          >
-            CONTINUAR
-          </button>
-
-          <button
-            onClick={() => setPaso(1)}
-            className="w-full bg-black text-white font-semibold p-3 rounded-xl"
-          >
-            VOLVER
-          </button>
         </div>
-      </div>
-    </main>
-  );
-}
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -112,7 +142,7 @@ export default function NuevoCierrePage() {
           </div>
 
           <button
-            onClick={handleContinuar}
+            onClick={handleContinuarPaso1}
             className="w-full bg-yellow-400 text-black font-semibold p-3 rounded-xl mt-4"
           >
             CONTINUAR
