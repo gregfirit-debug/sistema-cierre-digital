@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 export default function NuevoCierrePage() {
   const [movil, setMovil] = useState("");
@@ -16,6 +16,9 @@ export default function NuevoCierrePage() {
 
   const [fotoReloj, setFotoReloj] = useState<File | null>(null);
   const [fotoPos, setFotoPos] = useState<File | null>(null);
+
+  const relojInputRef = useRef<HTMLInputElement>(null);
+  const posInputRef = useRef<HTMLInputElement>(null);
 
   const handleContinuarPaso1 = () => {
     setMensaje("");
@@ -58,63 +61,78 @@ export default function NuevoCierrePage() {
             Fotos de respaldo
           </h1>
 
-       <div className="space-y-4">
-  <div>
-    <label className="text-sm text-gray-500 block mb-2">Foto del reloj</label>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-gray-500 mb-2">Foto del reloj</p>
 
-    <label className="w-full bg-yellow-400 text-black font-semibold p-3 rounded-xl block text-center cursor-pointer">
-      TOMAR FOTO DEL RELOJ
-      <input
-        type="file"
-        accept="image/*"
-        capture="environment"
-        onChange={(e) => setFotoReloj(e.target.files?.[0] || null)}
-        className="hidden"
-      />
-    </label>
+              <input
+                ref={relojInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={(e) => setFotoReloj(e.target.files?.[0] || null)}
+                className="hidden"
+              />
 
-    {fotoReloj && (
-      <p className="text-xs text-green-600 mt-2">{fotoReloj.name}</p>
-    )}
-  </div>
+              <button
+                type="button"
+                onClick={() => relojInputRef.current?.click()}
+                className="w-full bg-yellow-400 text-black font-semibold p-3 rounded-xl"
+              >
+                TOMAR FOTO DEL RELOJ
+              </button>
 
-  <div>
-    <label className="text-sm text-gray-500 block mb-2">Foto del POS</label>
+              {fotoReloj && (
+                <p className="text-xs text-green-600 mt-2">{fotoReloj.name}</p>
+              )}
+            </div>
 
-    <label className="w-full bg-yellow-400 text-black font-semibold p-3 rounded-xl block text-center cursor-pointer">
-      TOMAR FOTO DEL POS
-      <input
-        type="file"
-        accept="image/*"
-        capture="environment"
-        onChange={(e) => setFotoPos(e.target.files?.[0] || null)}
-        className="hidden"
-      />
-    </label>
+            <div>
+              <p className="text-sm text-gray-500 mb-2">Foto del POS</p>
 
-    {fotoPos && (
-      <p className="text-xs text-green-600 mt-2">{fotoPos.name}</p>
-    )}
-  </div>
+              <input
+                ref={posInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={(e) => setFotoPos(e.target.files?.[0] || null)}
+                className="hidden"
+              />
 
-  <button
-    onClick={handleContinuarPaso3}
-    className="w-full bg-black text-white font-semibold p-3 rounded-xl mt-4"
-  >
-    CONTINUAR
-  </button>
+              <button
+                type="button"
+                onClick={() => posInputRef.current?.click()}
+                className="w-full bg-yellow-400 text-black font-semibold p-3 rounded-xl"
+              >
+                TOMAR FOTO DEL POS
+              </button>
 
-  <button
-    onClick={() => setPaso(2)}
-    className="w-full border border-black text-black font-semibold p-3 rounded-xl"
-  >
-    VOLVER
-  </button>
+              {fotoPos && (
+                <p className="text-xs text-green-600 mt-2">{fotoPos.name}</p>
+              )}
+            </div>
 
-  {mensaje && (
-    <p className="text-center text-red-500 text-sm">{mensaje}</p>
-  )}
-</div>   
+            <button
+              type="button"
+              onClick={handleContinuarPaso3}
+              className="w-full bg-black text-white font-semibold p-3 rounded-xl mt-4"
+            >
+              CONTINUAR
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setPaso(2)}
+              className="w-full border border-black text-black font-semibold p-3 rounded-xl"
+            >
+              VOLVER
+            </button>
+
+            {mensaje && (
+              <p className="text-center text-red-500 text-sm">{mensaje}</p>
+            )}
+          </div>
+        </div>
       </main>
     );
   }
@@ -154,6 +172,7 @@ export default function NuevoCierrePage() {
             </div>
 
             <button
+              type="button"
               onClick={handleContinuarPaso2}
               className="w-full bg-yellow-400 text-black font-semibold p-3 rounded-xl mt-4"
             >
@@ -161,6 +180,7 @@ export default function NuevoCierrePage() {
             </button>
 
             <button
+              type="button"
               onClick={() => setPaso(1)}
               className="w-full bg-black text-white font-semibold p-3 rounded-xl"
             >
@@ -225,6 +245,7 @@ export default function NuevoCierrePage() {
           </div>
 
           <button
+            type="button"
             onClick={handleContinuarPaso1}
             className="w-full bg-yellow-400 text-black font-semibold p-3 rounded-xl mt-4"
           >
