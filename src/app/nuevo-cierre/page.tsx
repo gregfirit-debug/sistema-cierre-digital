@@ -90,18 +90,18 @@ export default function NuevoCierrePage() {
   const handleGuardarCierre = async () => {
     setMensaje("Guardando...");
 
-    const sessionResult = await supabase.auth.getSession();
-    const session = sessionResult.data.session;
+   const userResult = await supabase.auth.getUser();
+const user = userResult.data.user;
 
-    if (!session?.user) {
-      setMensaje("No hay usuario logueado");
-      return;
-    }
+if (!user) {
+  setMensaje("No hay usuario logueado");
+  return;
+}
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("cooperativa_id")
-      .eq("id", session.user.id)
+     .eq("id", user.id)
       .single();
 
     if (profileError || !profile) {
@@ -114,7 +114,7 @@ export default function NuevoCierrePage() {
       return;
     }
 
-    const nombreBase = `${Date.now()}-${session.user.id}`;
+   const nombreBase = `${Date.now()}-${user.id}`;
 
     const rutaReloj = `reloj/${nombreBase}-${fotoReloj.name}`;
     const rutaPos = `pos/${nombreBase}-${fotoPos.name}`;
@@ -149,7 +149,7 @@ export default function NuevoCierrePage() {
     const insertResult = await supabase.from("cierres").insert([
       {
         fecha: fechaHoy,
-        chofer: session.user.email || "Chofer",
+       chofer: user.email || "Chofer",
         movil,
         turno,
         km_inicio: Number(kmEntrada),
@@ -162,7 +162,7 @@ export default function NuevoCierrePage() {
         observaciones: "",
         foto_reloj_url: urlRelojData.data.publicUrl,
         foto_pos_url: urlPosData.data.publicUrl,
-        user_id: session.user.id,
+       user_id: user.id,
         cooperativa_id: profile.cooperativa_id,
       },
     ]);
