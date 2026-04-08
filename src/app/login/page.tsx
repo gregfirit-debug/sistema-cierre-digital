@@ -1,69 +1,74 @@
 "use client";
-import { useRouter } from "next/navigation";
+
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [mensaje, setMensaje] = useState("");
-const router = useRouter();
-  const iniciarSesion = async () => {
+  const router = useRouter();
+
+  const handleLogin = async () => {
     setMensaje("");
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error) {
-      setMensaje("Error: " + error.message);
+    if (error || !data.user) {
+      setMensaje("Error: " + (error?.message || "No user"));
       return;
     }
 
-    router.push("/admin");
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", data.user.id)
+      .single();
+
+    if (profile?.role === "admin") {
+      router.push("/admin");
+    } else {
+      router.push("/nuevo-cierre");
+    }
   };
 
   return (
-    <main className="min-h-screen p-6">
-      <div className="mx-auto max-w-md">
-        <h1 className="mb-6 text-2xl font-bold">Iniciar sesión</h1>
+    <main className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="bg-white p-6 rounded-2xl shadow-md w-full max-w-sm">
+        <h1 className="text-xl font-bold mb-4 text-center">
+          Iniciar sesión
+        </h1>
+
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full border rounded-xl p-3 mb-3"
+        />
+
+        <input
+          type="password"
+          placeholder="Contraseña"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full border rounded-xl p-3 mb-3"
+        />
+
+        <button
+          onClick={handleLogin}
+          className="w-full bg-black text-white p-3 rounded-xl"
+        >
+          Entrar
+        </button>
 
         {mensaje && (
-          <div className="mb-4 rounded bg-green-200 p-3 text-center text-green-900">
-            {mensaje}
-          </div>
+          <p className="mt-3 text-center text-red-500">{mensaje}</p>
         )}
-
-        <form className="space-y-4">
-          <div>
-            <label className="mb-1 block font-medium">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded border px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label className="mb-1 block font-medium">Contraseña</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded border px-3 py-2"
-            />
-          </div>
-
-          <button
-            type="button"
-            onClick={iniciarSesion}
-            className="w-full rounded bg-black px-4 py-2 text-white"
-          >
-            Entrar
-          </button>
-        </form>
       </div>
     </main>
   );
