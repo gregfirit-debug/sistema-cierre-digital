@@ -92,7 +92,7 @@ const { data, error } = await supabase
   );
 
   return (
-    <main className="min-h-screen p-6">
+    <main className="min-h-screen p-6 bg-gray-50">
       <div className="mx-auto max-w-4xl">
 
         <div className="mb-6 flex items-center justify-between">
@@ -102,7 +102,7 @@ const { data, error } = await supabase
             <button
               type="button"
               onClick={() => router.push("/nuevo-cierre")}
-              className="rounded bg-green-600 px-4 py-2 text-white"
+             className="rounded-xl bg-green-600 px-5 py-2 text-white shadow hover:bg-green-700 transition" 
             >
               Nuevo cierre
             </button>
@@ -174,16 +174,23 @@ const { data, error } = await supabase
           <div className="space-y-4">
             {cierresFiltrados.map((cierre) => (
               <Link key={cierre.id} href={`/admin/${cierre.id}`}>
-                <div className="cursor-pointer rounded border p-4 shadow-sm hover:bg-gray-50">
-                  <p><strong>Fecha:</strong> {cierre.fecha}</p>
-                  <p><strong>Chofer:</strong> {cierre.chofer}</p>
-                  <p><strong>Móvil:</strong> {cierre.movil}</p>
-                  <p><strong>Turno:</strong> {cierre.turno}</p>
+              <div className="cursor-pointer rounded-2xl border p-5 shadow-md hover:shadow-lg transition bg-white">
+                  <p className="text-sm text-gray-500">Fecha</p>
+<p className="font-semibold">{cierre.fecha}</p>
+                 <p className="text-sm text-gray-500">Fecha</p>
+<p className="font-semibold">{cierre.fecha}</p>
+                 <p className="text-sm text-gray-500">Fecha</p>
+<p className="font-semibold">{cierre.fecha}</p>
+                 <p className="text-sm text-gray-500">Fecha</p>
+<p className="font-semibold">{cierre.fecha}</p>
                   <p>
                     <strong>Hora de carga:</strong>{" "}
                     {new Date(cierre.created_at).toLocaleTimeString()}
                   </p>
-                  <p><strong>Total a entregar:</strong> {cierre.total_entregar}</p>
+                 <p className="text-sm text-gray-500 mt-2">Total a entregar</p>
+<p className="text-xl font-bold text-green-600">
+  ${cierre.total_entregar}
+</p>
                 </div>
               </Link>
             ))}
