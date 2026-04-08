@@ -7,17 +7,51 @@ export default function NuevoCierrePage() {
   const [turno, setTurno] = useState("");
   const [kmEntrada, setKmEntrada] = useState("");
   const [kmSalida, setKmSalida] = useState("");
+  const [paso, setPaso] = useState(1);
+  const [mensaje, setMensaje] = useState("");
+
+  const handleContinuar = () => {
+    setMensaje("");
+
+    if (!movil || !turno || !kmEntrada || !kmSalida) {
+      setMensaje("Completa todos los campos");
+      return;
+    }
+
+    setPaso(2);
+  };
+
+  if (paso === 2) {
+    return (
+      <main className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg p-6">
+          <h1 className="text-xl font-bold mb-6 text-center">
+            Paso 2
+          </h1>
+
+          <p className="text-center text-gray-600 mb-4">
+            Aquí sigue la carga del cierre.
+          </p>
+
+          <button
+            onClick={() => setPaso(1)}
+            className="w-full bg-black text-white font-semibold p-3 rounded-xl"
+          >
+            Volver
+          </button>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-gray-100 flex items-center justify-center">
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg p-6">
-
         <h1 className="text-xl font-bold mb-6 text-center">
           Inicio del Cierre
         </h1>
 
         <div className="space-y-4">
-
           <div>
             <label className="text-sm text-gray-500">Móvil</label>
             <input
@@ -58,10 +92,16 @@ export default function NuevoCierrePage() {
             />
           </div>
 
-          <button className="w-full bg-yellow-400 text-black font-semibold p-3 rounded-xl mt-4">
+          <button
+            onClick={handleContinuar}
+            className="w-full bg-yellow-400 text-black font-semibold p-3 rounded-xl mt-4"
+          >
             CONTINUAR
           </button>
 
+          {mensaje && (
+            <p className="text-center text-red-500 text-sm">{mensaje}</p>
+          )}
         </div>
       </div>
     </main>
