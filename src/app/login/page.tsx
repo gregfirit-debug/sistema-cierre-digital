@@ -23,17 +23,23 @@ export default function LoginPage() {
       return;
     }
 
-    const { data: profile } = await supabase
-  .from("profiles")
-  .select("role, cooperativa_id")
-  .eq("id", data.user.id)
-  .single();
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role, cooperativa_id")
+      .eq("id", data.user.id)
+      .single();
 
-localStorage.setItem("user_id", data.user.id);
-localStorage.setItem("user_email", data.user.email || "");
-localStorage.setItem("cooperativa_id", profile?.cooperativa_id || "");
+    if (profileError || !profile) {
+      setMensaje("No se encontró el perfil");
+      return;
+    }
 
-    if (profile?.role === "admin") {
+    localStorage.setItem("user_id", data.user.id);
+    localStorage.setItem("user_email", data.user.email || "");
+    localStorage.setItem("cooperativa_id", profile.cooperativa_id || "");
+    localStorage.setItem("role", profile.role || "");
+
+    if (profile.role === "admin") {
       router.push("/admin");
     } else {
       router.push("/nuevo-cierre");
@@ -64,6 +70,7 @@ localStorage.setItem("cooperativa_id", profile?.cooperativa_id || "");
         />
 
         <button
+          type="button"
           onClick={handleLogin}
           className="w-full bg-black text-white p-3 rounded-xl"
         >

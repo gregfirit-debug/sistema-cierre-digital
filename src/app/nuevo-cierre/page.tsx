@@ -1,8 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+
 export default function NuevoCierrePage() {
   const [movil, setMovil] = useState("");
   const [turno, setTurno] = useState("");
@@ -21,9 +22,10 @@ export default function NuevoCierrePage() {
 
   const [paso, setPaso] = useState(1);
   const [mensaje, setMensaje] = useState("");
-const router = useRouter();
+
   const relojInputRef = useRef<HTMLInputElement>(null);
   const posInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   const limpiarFormulario = () => {
     setMovil("");
@@ -38,7 +40,12 @@ const router = useRouter();
     setPreviewReloj("");
     setPreviewPos("");
     setPaso(1);
-    setMensaje("");
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    localStorage.clear();
+    router.push("/login");
   };
 
   const handleContinuarPaso1 = () => {
@@ -89,28 +96,22 @@ const router = useRouter();
 
   const handleGuardarCierre = async () => {
     setMensaje("Guardando...");
-const handleLogout = async () => {
-  await supabase.auth.signOut();
-  localStorage.clear();
-  router.push("/login");
-};
-  const userId = localStorage.getItem("user_id");
-const userEmail = localStorage.getItem("user_email");
-const cooperativaId = localStorage.getItem("cooperativa_id");
 
-if (!userId || !cooperativaId) {
-  setMensaje("No hay usuario logueado");
-  return;
-}
+    const userId = localStorage.getItem("user_id");
+    const userEmail = localStorage.getItem("user_email");
+    const cooperativaId = localStorage.getItem("cooperativa_id");
 
-  
+    if (!userId || !cooperativaId) {
+      setMensaje("No hay usuario logueado");
+      return;
+    }
 
     if (!fotoReloj || !fotoPos) {
       setMensaje("Faltan fotos");
       return;
     }
 
- const nombreBase = `${Date.now()}-${userId}`;
+    const nombreBase = `${Date.now()}-${userId}`;
 
     const rutaReloj = `reloj/${nombreBase}-${fotoReloj.name}`;
     const rutaPos = `pos/${nombreBase}-${fotoPos.name}`;
@@ -145,7 +146,7 @@ if (!userId || !cooperativaId) {
     const insertResult = await supabase.from("cierres").insert([
       {
         fecha: fechaHoy,
-      chofer: userEmail || "Chofer",
+        chofer: userEmail || "Chofer",
         movil,
         turno,
         km_inicio: Number(kmEntrada),
@@ -158,8 +159,8 @@ if (!userId || !cooperativaId) {
         observaciones: "",
         foto_reloj_url: urlRelojData.data.publicUrl,
         foto_pos_url: urlPosData.data.publicUrl,
-       user_id: userId,
-       cooperativa_id: cooperativaId,
+        user_id: userId,
+        cooperativa_id: cooperativaId,
       },
     ]);
 
@@ -168,8 +169,8 @@ if (!userId || !cooperativaId) {
       return;
     }
 
-    limpiarFormulario();
     setMensaje("Cierre guardado correctamente");
+    limpiarFormulario();
   };
 
   if (paso === 4) {
@@ -214,6 +215,14 @@ if (!userId || !cooperativaId) {
             className="w-full border border-black text-black font-semibold p-3 rounded-xl mt-3"
           >
             VOLVER
+          </button>
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="w-full text-red-600 font-semibold p-3 mt-3"
+          >
+            CERRAR SESIÓN
           </button>
 
           {mensaje && (
@@ -293,7 +302,7 @@ if (!userId || !cooperativaId) {
               {previewPos && (
                 <img
                   src={previewPos}
-                  alt="Preview POS"
+                  alt="Preview pos"
                   className="mt-2 rounded-xl w-full"
                 />
               )}
