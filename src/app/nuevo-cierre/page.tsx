@@ -252,16 +252,16 @@ export default function NuevoCierrePage() {
           user_id: user.id,
           cooperativa_id: cooperativaId,
           observaciones: "",
-          estado: "pendiente",
+         
         },
       ]);
 
-      if (insertError) {
-        setMensaje("Error al guardar cierre");
-        setGuardando(false);
-        return;
-      }
-
+     if (insertError) {
+  console.error("INSERT ERROR REAL:", insertError);
+  setMensaje(insertError.message || "Error al guardar cierre");
+  setGuardando(false);
+  return;
+}
       limpiarFormulario();
 
       setTimeout(() => {
