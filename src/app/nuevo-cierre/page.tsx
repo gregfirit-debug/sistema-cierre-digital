@@ -1,10 +1,12 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 export default function NuevoCierrePage() {
+  const router = useRouter();
+
   const [movil, setMovil] = useState("");
   const [turno, setTurno] = useState("");
   const [kmEntrada, setKmEntrada] = useState("");
@@ -13,6 +15,7 @@ export default function NuevoCierrePage() {
   const [totalReloj, setTotalReloj] = useState("");
   const [totalPos, setTotalPos] = useState("");
   const [gastos, setGastos] = useState("");
+  const [retiraChofer, setRetiraChofer] = useState("");
 
   const [fotoReloj, setFotoReloj] = useState<File | null>(null);
   const [fotoPos, setFotoPos] = useState<File | null>(null);
@@ -22,10 +25,31 @@ export default function NuevoCierrePage() {
 
   const [paso, setPaso] = useState(1);
   const [mensaje, setMensaje] = useState("");
+  const [guardando, setGuardando] = useState(false);
 
+  const totalRelojRef = useRef<HTMLInputElement>(null);
   const relojInputRef = useRef<HTMLInputElement>(null);
   const posInputRef = useRef<HTMLInputElement>(null);
-  const router = useRouter();
+
+  useEffect(() => {
+    if (paso !== 2) return;
+
+    const id = window.setTimeout(() => {
+      totalRelojRef.current?.focus();
+      totalRelojRef.current?.select();
+    }, 50);
+
+    return () => window.clearTimeout(id);
+  }, [paso]);
+
+  const totalEntregar = useMemo(() => {
+    const reloj = Number(totalReloj) || 0;
+    const pos = Number(totalPos) || 0;
+    const gastosNumero = Number(gastos) || 0;
+    const retiraNumero = Number(retiraChofer) || 0;
+
+    return reloj + pos - gastosNumero - retiraNumero;
+  }, [totalReloj, totalPos, gastos, retiraChofer]);
 
   const limpiarFormulario = () => {
     setMovil("");
@@ -35,6 +59,7 @@ export default function NuevoCierrePage() {
     setTotalReloj("");
     setTotalPos("");
     setGastos("");
+    setRetiraChofer("");
     setFotoReloj(null);
     setFotoPos(null);
     setPreviewReloj("");
@@ -46,6 +71,47 @@ export default function NuevoCierrePage() {
     await supabase.auth.signOut();
     localStorage.clear();
     router.push("/login");
+  };
+
+  const handleVolverAtras = () => {
+    if (guardando) return;
+
+    if (paso === 1) {
+      router.back();
+      return;
+    }
+
+    setMensaje("");
+    setPaso((prev) => prev - 1);
+  };
+
+  const subirArchivo = async (
+    file: File,
+    carpeta: "reloj" | "pos",
+    userId: string
+  ) => {
+    const extension =
+      file.name && file.name.includes(".")
+        ? file.name.split(".").pop()?.toLowerCase()
+        : "jpg";
+
+    const extensionFinal = extension || "jpg";
+    const nombre = `${Date.now()}-${carpeta}-${crypto.randomUUID()}.${extensionFinal}`;
+    const ruta = `${userId}/${carpeta}/${nombre}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("cierres")
+      .upload(ruta, file, {
+        upsert: false,
+        contentType: file.type || "image/jpeg",
+      });
+
+    if (uploadError) {
+      throw new Error(`Error subiendo foto del ${carpeta}: ${uploadError.message}`);
+    }
+
+    const { data } = supabase.storage.from("cierres").getPublicUrl(ruta);
+    return data.publicUrl;
   };
 
   const handleContinuarPaso1 = () => {
@@ -64,6 +130,11 @@ export default function NuevoCierrePage() {
       return;
     }
 
+    if (kmIn < 0 || kmOut < 0) {
+      setMensaje("Los kilómetros no pueden ser negativos");
+      return;
+    }
+
     if (kmOut <= kmIn) {
       setMensaje("Km salida debe ser mayor que Km entrada");
       return;
@@ -75,8 +146,33 @@ export default function NuevoCierrePage() {
   const handleContinuarPaso2 = () => {
     setMensaje("");
 
-    if (!totalReloj || !totalPos || !gastos) {
+    if (!totalReloj || !totalPos || !gastos || !retiraChofer) {
       setMensaje("Completa todos los campos");
+      return;
+    }
+
+    const reloj = Number(totalReloj);
+    const pos = Number(totalPos);
+    const gastosNumero = Number(gastos);
+    const retiraNumero = Number(retiraChofer);
+
+    if (
+      Number.isNaN(reloj) ||
+      Number.isNaN(pos) ||
+      Number.isNaN(gastosNumero) ||
+      Number.isNaN(retiraNumero)
+    ) {
+      setMensaje("Recaudación, gastos y retiro deben ser números");
+      return;
+    }
+
+    if (reloj < 0 || pos < 0 || gastosNumero < 0 || retiraNumero < 0) {
+      setMensaje("Los importes no pueden ser negativos");
+      return;
+    }
+
+    if (totalEntregar < 0) {
+      setMensaje("El total a entregar no puede ser negativo");
       return;
     }
 
@@ -95,92 +191,122 @@ export default function NuevoCierrePage() {
   };
 
   const handleGuardarCierre = async () => {
-    setMensaje("Guardando...");
+    if (guardando) return;
 
-    const userId = localStorage.getItem("user_id");
-    const userEmail = localStorage.getItem("user_email");
-    const cooperativaId = localStorage.getItem("cooperativa_id");
+    setGuardando(true);
+    setMensaje("Enviando a Central...");
 
-    if (!userId || !cooperativaId) {
-      setMensaje("No hay usuario logueado");
-      return;
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        setMensaje("No hay usuario logueado");
+        setGuardando(false);
+        return;
+      }
+
+      const cooperativaId = localStorage.getItem("cooperativa_id");
+
+      if (!cooperativaId) {
+        setMensaje("No se encontró la cooperativa del usuario");
+        setGuardando(false);
+        return;
+      }
+
+      if (!fotoReloj || !fotoPos) {
+        setMensaje("Debes cargar ambas fotos");
+        setGuardando(false);
+        return;
+      }
+
+      const fotoRelojUrl = await subirArchivo(fotoReloj, "reloj", user.id);
+      const fotoPosUrl = await subirArchivo(fotoPos, "pos", user.id);
+
+      const kmInicioNumero = Number(kmEntrada);
+      const kmFinNumero = Number(kmSalida);
+      const totalRelojNumero = Number(totalReloj);
+      const totalPosNumero = Number(totalPos);
+      const gastosNumero = Number(gastos);
+      const retiraNumero = Number(retiraChofer);
+
+      const { error: insertError } = await supabase.from("cierres").insert([
+        {
+          fecha: new Date().toISOString().slice(0, 10),
+          chofer: user.email || "Chofer",
+          movil,
+          turno,
+          km_inicio: kmInicioNumero,
+          km_fin: kmFinNumero,
+          km_total: kmFinNumero - kmInicioNumero,
+          total_reloj: totalRelojNumero,
+          total_tarjetas: totalPosNumero,
+          gastos: gastosNumero,
+          retira_chofer: retiraNumero,
+          total_entregar:
+            totalRelojNumero + totalPosNumero - gastosNumero - retiraNumero,
+          foto_reloj_url: fotoRelojUrl,
+          foto_pos_url: fotoPosUrl,
+          user_id: user.id,
+          cooperativa_id: cooperativaId,
+          observaciones: "",
+          estado: "pendiente",
+        },
+      ]);
+
+      if (insertError) {
+        setMensaje("Error al guardar cierre");
+        setGuardando(false);
+        return;
+      }
+
+      limpiarFormulario();
+
+      setTimeout(() => {
+        setMensaje("Cierre enviado a Central correctamente");
+      }, 100);
+
+      setGuardando(false);
+    } catch (error: any) {
+      console.error("ERROR REAL:", error);
+      setMensaje(error?.message || "Error al subir fotos o guardar cierre");
+      setGuardando(false);
     }
-
-    if (!fotoReloj || !fotoPos) {
-      setMensaje("Faltan fotos");
-      return;
-    }
-
-    const nombreBase = `${Date.now()}-${userId}`;
-
-    const rutaReloj = `reloj/${nombreBase}-${fotoReloj.name}`;
-    const rutaPos = `pos/${nombreBase}-${fotoPos.name}`;
-
-    const subidaReloj = await supabase.storage
-      .from("cierres")
-      .upload(rutaReloj, fotoReloj);
-
-    if (subidaReloj.error) {
-      setMensaje("Error subiendo foto del reloj");
-      return;
-    }
-
-    const subidaPos = await supabase.storage
-      .from("cierres")
-      .upload(rutaPos, fotoPos);
-
-    if (subidaPos.error) {
-      setMensaje("Error subiendo foto del POS");
-      return;
-    }
-
-    const urlRelojData = supabase.storage.from("cierres").getPublicUrl(rutaReloj);
-    const urlPosData = supabase.storage.from("cierres").getPublicUrl(rutaPos);
-
-    const kmTotalCalculado = Number(kmSalida) - Number(kmEntrada);
-    const totalEntregarCalculado =
-      Number(totalReloj) + Number(totalPos) - Number(gastos);
-
-    const fechaHoy = new Date().toISOString().slice(0, 10);
-
-    const insertResult = await supabase.from("cierres").insert([
-      {
-        fecha: fechaHoy,
-        chofer: userEmail || "Chofer",
-        movil,
-        turno,
-        km_inicio: Number(kmEntrada),
-        km_fin: Number(kmSalida),
-        km_total: kmTotalCalculado,
-        total_reloj: Number(totalReloj),
-        total_tarjetas: Number(totalPos),
-        gastos: Number(gastos),
-        total_entregar: totalEntregarCalculado,
-        observaciones: "",
-        foto_reloj_url: urlRelojData.data.publicUrl,
-        foto_pos_url: urlPosData.data.publicUrl,
-        user_id: userId,
-        cooperativa_id: cooperativaId,
-      },
-    ]);
-
-    if (insertResult.error) {
-      setMensaje("Error al guardar cierre");
-      return;
-    }
-
-    setMensaje("Cierre guardado correctamente");
-    limpiarFormulario();
   };
 
-  if (paso === 4) {
-    const totalEntregar =
-      Number(totalReloj) + Number(totalPos) - Number(gastos);
+  const BarraSuperior = () => (
+    <div className="mb-2 flex items-center justify-between">
+      <button
+        type="button"
+        onClick={handleVolverAtras}
+        disabled={guardando}
+        className="px-1 text-xl leading-none text-gray-500 disabled:opacity-50"
+        aria-label="Volver atrás"
+        title="Volver atrás"
+      >
+        ←
+      </button>
 
+      <button
+        type="button"
+        onClick={handleLogout}
+        disabled={guardando}
+        className="text-sm font-semibold text-rose-400 disabled:opacity-50"
+      >
+        Cerrar sesión
+      </button>
+    </div>
+  );
+
+  if (paso === 4) {
     return (
-      <main className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg p-6">
-          <h1 className="text-xl font-bold mb-6 text-center">
+      <main className="min-h-screen bg-gray-100 p-4 flex items-center justify-center">
+        <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-lg">
+          <BarraSuperior />
+
+          <h1 className="mb-6 text-center text-xl font-bold">
             Revisar y confirmar
           </h1>
 
@@ -192,8 +318,9 @@ export default function NuevoCierrePage() {
             <p><strong>Total reloj:</strong> {totalReloj}</p>
             <p><strong>Total POS:</strong> {totalPos}</p>
             <p><strong>Gastos:</strong> {gastos}</p>
+            <p><strong>Retira chofer:</strong> {retiraChofer}</p>
 
-            <div className="bg-green-100 p-4 rounded-xl mt-2">
+            <div className="mt-2 rounded-xl bg-green-100 p-4">
               <p className="text-gray-600">Total a entregar</p>
               <p className="text-2xl font-bold text-green-700">
                 ${totalEntregar}
@@ -204,29 +331,14 @@ export default function NuevoCierrePage() {
           <button
             type="button"
             onClick={handleGuardarCierre}
-            className="w-full bg-yellow-400 text-black font-semibold p-3 rounded-xl mt-6"
+            disabled={guardando}
+            className="mt-6 w-full rounded-xl bg-yellow-400 p-3 font-semibold text-black disabled:opacity-60"
           >
-            CONFIRMAR CIERRE
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setPaso(3)}
-            className="w-full border border-black text-black font-semibold p-3 rounded-xl mt-3"
-          >
-            VOLVER
-          </button>
-
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="w-full text-red-600 font-semibold p-3 mt-3"
-          >
-            CERRAR SESIÓN
+            {guardando ? "ENVIANDO A CENTRAL..." : "CONFIRMAR CIERRE"}
           </button>
 
           {mensaje && (
-            <p className="text-center text-sm mt-3">{mensaje}</p>
+            <p className="mt-3 text-center text-sm text-rose-400">{mensaje}</p>
           )}
         </div>
       </main>
@@ -235,33 +347,35 @@ export default function NuevoCierrePage() {
 
   if (paso === 3) {
     return (
-      <main className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg p-6">
-          <h1 className="text-xl font-bold mb-6 text-center">
+      <main className="min-h-screen bg-gray-100 p-4 flex items-center justify-center">
+        <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-lg">
+          <BarraSuperior />
+
+          <h1 className="mb-6 text-center text-xl font-bold">
             Fotos de respaldo
           </h1>
 
           <div className="space-y-4">
             <div>
-              <p className="text-sm text-gray-500 mb-2">Foto del reloj</p>
+              <p className="mb-2 text-sm text-gray-500">Foto del reloj</p>
 
               <input
                 ref={relojInputRef}
                 type="file"
                 accept="image/*"
                 capture="environment"
+                className="hidden"
                 onChange={(e) => {
                   const file = e.target.files?.[0] || null;
                   setFotoReloj(file);
                   setPreviewReloj(file ? URL.createObjectURL(file) : "");
                 }}
-                className="hidden"
               />
 
               <button
                 type="button"
                 onClick={() => relojInputRef.current?.click()}
-                className="w-full bg-yellow-400 text-black font-semibold p-3 rounded-xl"
+                className="w-full rounded-xl bg-yellow-400 p-3 font-semibold text-black"
               >
                 TOMAR FOTO DEL RELOJ
               </button>
@@ -270,31 +384,31 @@ export default function NuevoCierrePage() {
                 <img
                   src={previewReloj}
                   alt="Preview reloj"
-                  className="mt-2 rounded-xl w-full"
+                  className="mt-2 w-full rounded-xl"
                 />
               )}
             </div>
 
             <div>
-              <p className="text-sm text-gray-500 mb-2">Foto del POS</p>
+              <p className="mb-2 text-sm text-gray-500">Foto del POS</p>
 
               <input
                 ref={posInputRef}
                 type="file"
                 accept="image/*"
                 capture="environment"
+                className="hidden"
                 onChange={(e) => {
                   const file = e.target.files?.[0] || null;
                   setFotoPos(file);
                   setPreviewPos(file ? URL.createObjectURL(file) : "");
                 }}
-                className="hidden"
               />
 
               <button
                 type="button"
                 onClick={() => posInputRef.current?.click()}
-                className="w-full bg-yellow-400 text-black font-semibold p-3 rounded-xl"
+                className="w-full rounded-xl bg-yellow-400 p-3 font-semibold text-black"
               >
                 TOMAR FOTO DEL POS
               </button>
@@ -303,7 +417,7 @@ export default function NuevoCierrePage() {
                 <img
                   src={previewPos}
                   alt="Preview pos"
-                  className="mt-2 rounded-xl w-full"
+                  className="mt-2 w-full rounded-xl"
                 />
               )}
             </div>
@@ -311,21 +425,13 @@ export default function NuevoCierrePage() {
             <button
               type="button"
               onClick={handleContinuarPaso3}
-              className="w-full bg-black text-white p-3 rounded-xl"
+              className="w-full rounded-xl bg-black p-3 text-white"
             >
               CONTINUAR
             </button>
 
-            <button
-              type="button"
-              onClick={() => setPaso(2)}
-              className="w-full border border-black p-3 rounded-xl"
-            >
-              VOLVER
-            </button>
-
             {mensaje && (
-              <p className="text-center text-red-500 text-sm">{mensaje}</p>
+              <p className="text-center text-sm text-rose-400">{mensaje}</p>
             )}
           </div>
         </div>
@@ -335,50 +441,60 @@ export default function NuevoCierrePage() {
 
   if (paso === 2) {
     return (
-      <main className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg p-6">
-          <h1 className="text-xl font-bold mb-6 text-center">Recaudación</h1>
+      <main className="min-h-screen bg-gray-100 p-4 flex items-center justify-center">
+        <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-lg">
+          <BarraSuperior />
+
+          <h1 className="mb-6 text-center text-xl font-bold">Recaudación</h1>
 
           <div className="space-y-4">
             <input
+              ref={totalRelojRef}
+              type="number"
+              inputMode="numeric"
               value={totalReloj}
               onChange={(e) => setTotalReloj(e.target.value)}
               placeholder="Total reloj"
-              className="w-full border p-3 rounded-xl"
+              className="w-full rounded-xl border p-3"
             />
 
             <input
+              type="number"
+              inputMode="numeric"
               value={totalPos}
               onChange={(e) => setTotalPos(e.target.value)}
               placeholder="Total POS"
-              className="w-full border p-3 rounded-xl"
+              className="w-full rounded-xl border p-3"
             />
 
             <input
+              type="number"
+              inputMode="numeric"
               value={gastos}
               onChange={(e) => setGastos(e.target.value)}
               placeholder="Gastos"
-              className="w-full border p-3 rounded-xl"
+              className="w-full rounded-xl border p-3"
+            />
+
+            <input
+              type="number"
+              inputMode="numeric"
+              value={retiraChofer}
+              onChange={(e) => setRetiraChofer(e.target.value)}
+              placeholder="Retira chofer"
+              className="w-full rounded-xl border p-3"
             />
 
             <button
               type="button"
               onClick={handleContinuarPaso2}
-              className="w-full bg-yellow-400 p-3 rounded-xl"
+              className="w-full rounded-xl bg-yellow-400 p-3"
             >
               CONTINUAR
             </button>
 
-            <button
-              type="button"
-              onClick={() => setPaso(1)}
-              className="w-full border p-3 rounded-xl"
-            >
-              VOLVER
-            </button>
-
             {mensaje && (
-              <p className="text-red-500 text-sm text-center">{mensaje}</p>
+              <p className="text-center text-sm text-rose-400">{mensaje}</p>
             )}
           </div>
         </div>
@@ -387,24 +503,26 @@ export default function NuevoCierrePage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg p-6">
-        <h1 className="text-xl font-bold mb-6 text-center">
-          Inicio del Cierre
+    <main className="min-h-screen bg-gray-100 p-4 flex items-center justify-center">
+      <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-lg">
+        <BarraSuperior />
+
+        <h1 className="mb-6 text-center text-xl font-bold">
+          Inicio del cierre
         </h1>
 
         <div className="space-y-4">
           <input
             value={movil}
             onChange={(e) => setMovil(e.target.value)}
-            placeholder="Móvil"
-            className="w-full border p-3 rounded-xl"
+            placeholder="Movil"
+            className="w-full rounded-xl border p-3"
           />
 
           <select
             value={turno}
             onChange={(e) => setTurno(e.target.value)}
-            className="w-full border p-3 rounded-xl"
+            className="w-full rounded-xl border p-3"
           >
             <option value="">Turno</option>
             <option value="diurno">Diurno</option>
@@ -412,29 +530,33 @@ export default function NuevoCierrePage() {
           </select>
 
           <input
+            type="number"
+            inputMode="numeric"
             value={kmEntrada}
             onChange={(e) => setKmEntrada(e.target.value)}
             placeholder="Km entrada"
-            className="w-full border p-3 rounded-xl"
+            className="w-full rounded-xl border p-3"
           />
 
           <input
+            type="number"
+            inputMode="numeric"
             value={kmSalida}
             onChange={(e) => setKmSalida(e.target.value)}
             placeholder="Km salida"
-            className="w-full border p-3 rounded-xl"
+            className="w-full rounded-xl border p-3"
           />
 
           <button
             type="button"
             onClick={handleContinuarPaso1}
-            className="w-full bg-yellow-400 p-3 rounded-xl"
+            className="w-full rounded-xl bg-yellow-400 p-3"
           >
             CONTINUAR
           </button>
 
           {mensaje && (
-            <p className="text-red-500 text-sm text-center">{mensaje}</p>
+            <p className="text-center text-sm text-rose-400">{mensaje}</p>
           )}
         </div>
       </div>

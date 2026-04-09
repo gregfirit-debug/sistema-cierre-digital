@@ -36,8 +36,8 @@ export default function LoginPage() {
 
     localStorage.setItem("user_id", data.user.id);
     localStorage.setItem("user_email", data.user.email || "");
-    localStorage.setItem("cooperativa_id", profile.cooperativa_id || "");
-    localStorage.setItem("role", profile.role || "");
+    localStorage.setItem("cooperativa_id", String(profile.cooperativa_id || ""));
+    localStorage.setItem("role", String(profile.role || ""));
 
     if (profile.role === "admin") {
       router.push("/admin");

@@ -173,30 +173,37 @@ const { data, error } = await supabase
         ) : cierresFiltrados.length === 0 ? (
           <p>No hay cierres cargados.</p>
         ) : (
-          <div className="space-y-4">
-            {cierresFiltrados.map((cierre) => (
-              <Link key={cierre.id} href={`/admin/${cierre.id}`}>
-              <div className="cursor-pointer rounded-2xl border p-5 shadow-md hover:shadow-lg transition bg-white">
-                  <p className="text-sm text-gray-500">Fecha</p>
-<p className="font-semibold">{cierre.fecha}</p>
-                 <p className="text-sm text-gray-500">Fecha</p>
-<p className="font-semibold">{cierre.fecha}</p>
-                 <p className="text-sm text-gray-500">Fecha</p>
-<p className="font-semibold">{cierre.fecha}</p>
-                 <p className="text-sm text-gray-500">Fecha</p>
-<p className="font-semibold">{cierre.fecha}</p>
-                  <p>
-                    <strong>Hora de carga:</strong>{" "}
-                    {new Date(cierre.created_at).toLocaleTimeString()}
-                  </p>
-                 <p className="text-sm text-gray-500 mt-2">Total a entregar</p>
-<p className="text-xl font-bold text-green-600">
-  ${cierre.total_entregar}
-</p>
-                </div>
-              </Link>
-            ))}
+         <div className="space-y-4">
+  {cierresFiltrados.map((cierre) => (
+    <Link key={cierre.id} href={`/admin/${cierre.id}`}>
+      <div className="cursor-pointer rounded-xl border p-4 shadow-sm hover:shadow-md transition bg-white">
+
+        <div className="flex justify-between items-center">
+          <div>
+            <p className="text-sm text-gray-500">Fecha</p>
+            <p className="font-semibold">{cierre.fecha}</p>
           </div>
+
+          <div className="text-right">
+            <p className="text-sm text-gray-500">Total</p>
+            <p className="text-lg font-bold text-green-600">
+              ${cierre.total_entregar}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-2 text-sm text-gray-600">
+          {cierre.movil} · {cierre.turno}
+        </div>
+
+        <div className="text-xs text-gray-400 mt-1">
+          {new Date(cierre.created_at).toLocaleTimeString()}
+        </div>
+
+      </div>
+    </Link>
+  ))}
+</div>
         )}
       </div>
     </main>
