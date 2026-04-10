@@ -123,8 +123,8 @@ export default function DetalleCierrePage() {
         <div className="bg-white rounded-xl shadow-sm p-4 mb-4 space-y-1">
           <h2 className="font-semibold mb-2">Información</h2>
 
-          <p>Chofer: {cierre.chofer}</p>
-
+     <p>Chofer: {cierre.chofer}</p>
+<p>Número de chofer: {cierre.numero_chofer}</p>
           {cierre.created_at && (
             <p>Hora: {new Date(cierre.created_at).toLocaleTimeString()}</p>
           )}

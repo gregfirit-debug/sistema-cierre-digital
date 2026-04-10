@@ -9,6 +9,7 @@ export default function NuevoCierrePage() {
 
   const [movil, setMovil] = useState("");
   const [turno, setTurno] = useState("");
+  const [numeroChofer, setNumeroChofer] = useState("");
   const [kmEntrada, setKmEntrada] = useState("");
   const [kmSalida, setKmSalida] = useState("");
 
@@ -60,6 +61,7 @@ export default function NuevoCierrePage() {
     setTotalPos("");
     setGastos("");
     setRetiraChofer("");
+    setNumeroChofer("");
     setFotoReloj(null);
     setFotoPos(null);
     setPreviewReloj("");
@@ -251,6 +253,7 @@ export default function NuevoCierrePage() {
     foto_pos_url: fotoPosUrl,
     user_id: user.id,
     cooperativa_id: cooperativaId,
+    numero_chofer: numeroChofer,
   },
 ]);
      if (insertError) {
@@ -509,6 +512,12 @@ export default function NuevoCierrePage() {
         </h1>
 
         <div className="space-y-4">
+          <input
+  value={numeroChofer}
+  onChange={(e) => setNumeroChofer(e.target.value)}
+  placeholder="Número de chofer"
+  className="w-full rounded-xl border p-3"
+/>
           <input
             value={movil}
             onChange={(e) => setMovil(e.target.value)}

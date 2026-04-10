@@ -9,6 +9,7 @@ type Cierre = {
   id: string;
   fecha: string;
   chofer: string;
+  numero_chofer: string;
   movil: string;
   turno: string;
   total_entregar: number;
@@ -67,7 +68,7 @@ export default function AdminPage() {
 
       const { data, error } = await supabase
         .from("cierres")
-        .select("id, fecha, chofer, movil, turno, total_entregar, created_at, revisado")
+        .select("id, fecha, chofer, numero_chofer, movil, turno, total_entregar, created_at, revisado")
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -198,10 +199,11 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  <div className="mt-2 text-sm text-gray-600">
-                    <strong>Móvil:</strong> {cierre.movil} |{" "}
-                    <strong>Turno:</strong> {cierre.turno}
-                  </div>
+     <div className="mt-2 text-sm text-gray-600">
+  <strong>Chofer:</strong> {cierre.numero_chofer} |{" "}
+  <strong>Móvil:</strong> {cierre.movil} |{" "}
+  <strong>Turno:</strong> {cierre.turno}
+</div>
 
                   <div className="mt-1 text-sm text-gray-600">
                     {new Date(cierre.created_at).toLocaleTimeString()}
