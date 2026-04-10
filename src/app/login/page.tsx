@@ -8,10 +8,15 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [mensaje, setMensaje] = useState("");
+  const [cargando, setCargando] = useState(false);
+
   const router = useRouter();
 
   const handleLogin = async () => {
+    if (cargando) return;
+
     setMensaje("");
+    setCargando(true);
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -19,7 +24,8 @@ export default function LoginPage() {
     });
 
     if (error || !data.user) {
-      setMensaje("Error: " + (error?.message || "No user"));
+      setMensaje("Error de acceso");
+      setCargando(false);
       return;
     }
 
@@ -31,19 +37,21 @@ export default function LoginPage() {
 
     if (profileError || !profile) {
       setMensaje("No se encontró el perfil");
+      setCargando(false);
       return;
     }
 
     localStorage.setItem("user_id", data.user.id);
-    localStorage.setItem("user_email", data.user.email || "");
-    localStorage.setItem("cooperativa_id", String(profile.cooperativa_id || ""));
-    localStorage.setItem("role", String(profile.role || ""));
+    localStorage.setItem("cooperativa_id", profile.cooperativa_id || "");
+    localStorage.setItem("role", profile.role || "");
 
-    if (profile.role === "admin") {
+   if (profile.role === "admin" || profile.role === "administrador") {
       router.push("/admin");
     } else {
       router.push("/nuevo-cierre");
     }
+
+    setCargando(false);
   };
 
   return (
@@ -70,11 +78,11 @@ export default function LoginPage() {
         />
 
         <button
-          type="button"
           onClick={handleLogin}
+          disabled={cargando}
           className="w-full bg-black text-white p-3 rounded-xl"
         >
-          Entrar
+          {cargando ? "Entrando..." : "Entrar"}
         </button>
 
         {mensaje && (
