@@ -232,7 +232,7 @@ export default function NuevoCierrePage() {
       const gastosNumero = Number(gastos);
       const retiraNumero = Number(retiraChofer);
 
-    await supabase.from("cierres").insert([
+   const { error: insertError } = await supabase.from("cierres").insert([
   {
     fecha: new Date().toISOString().slice(0, 10),
     chofer: user.email || "Chofer",
