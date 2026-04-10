@@ -232,30 +232,27 @@ export default function NuevoCierrePage() {
       const gastosNumero = Number(gastos);
       const retiraNumero = Number(retiraChofer);
 
-      const { error: insertError } = await supabase.from("cierres").insert([
-        {
-          fecha: new Date().toISOString().slice(0, 10),
-          chofer: user.email || "Chofer",
-          movil,
-          turno,
-          km_inicio: kmInicioNumero,
-          km_fin: kmFinNumero,
-          km_total: kmFinNumero - kmInicioNumero,
-          total_reloj: totalRelojNumero,
-          total_tarjetas: totalPosNumero,
-          gastos: gastosNumero,
-          retira_chofer: retiraNumero,
-          total_entregar:
-            totalRelojNumero + totalPosNumero - gastosNumero - retiraNumero,
-          foto_reloj_url: fotoRelojUrl,
-          foto_pos_url: fotoPosUrl,
-          user_id: user.id,
-          cooperativa_id: cooperativaId,
-          observaciones: "",
-         
-        },
-      ]);
-
+    await supabase.from("cierres").insert([
+  {
+    fecha: new Date().toISOString().slice(0, 10),
+    chofer: user.email || "Chofer",
+    movil,
+    turno,
+    km_inicio: kmInicioNumero,
+    km_fin: kmFinNumero,
+    km_total: kmFinNumero - kmInicioNumero,
+    total_reloj: totalRelojNumero,
+    total_tarjetas: totalPosNumero,
+    gastos: gastosNumero,
+    retira_chofer: retiraNumero,
+    total_entregar:
+      totalRelojNumero + totalPosNumero - gastosNumero - retiraNumero,
+    foto_reloj_url: fotoRelojUrl,
+    foto_pos_url: fotoPosUrl,
+    user_id: user.id,
+    cooperativa_id: cooperativaId,
+  },
+]);
      if (insertError) {
   console.error("INSERT ERROR REAL:", insertError);
   setMensaje(insertError.message || "Error al guardar cierre");
