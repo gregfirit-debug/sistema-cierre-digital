@@ -41,8 +41,6 @@ export default function DetalleCierrePage() {
   return (
     <main className="min-h-screen p-6 bg-gray-50">
       <div className="mx-auto max-w-md">
-
-        {/* HEADER */}
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-xl font-bold">Detalle del cierre</h1>
 
@@ -55,47 +53,49 @@ export default function DetalleCierrePage() {
           </button>
         </div>
 
-        {/* RESUMEN PRINCIPAL */}
         <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
-  <p className="text-sm text-gray-500">Fecha</p>
-  <p className="font-semibold">{cierre.fecha}</p>
+          <p className="text-sm text-gray-500">Fecha</p>
+          <p className="font-semibold">{cierre.fecha}</p>
 
-  <div className="mt-2 text-sm text-gray-600">
-    {cierre.movil} · {cierre.turno}
-  </div>
+          <div className="mt-2 text-sm text-gray-600">
+            {cierre.movil} · {cierre.turno}
+          </div>
 
-  <div className="mt-3 flex items-center justify-between">
-    <span
-      className={`text-xs px-2 py-1 rounded-full ${
-        cierre.estado === "revisado"
-          ? "bg-green-100 text-green-700"
-          : "bg-yellow-100 text-yellow-700"
-      }`}
-    >
-      {cierre.estado === "revisado" ? "Revisado" : "Pendiente"}
-    </span>
+          <div className="mt-3 flex items-center justify-between">
+            <span
+              className={`text-xs px-2 py-1 rounded-full ${
+                cierre.revisado
+                  ? "bg-green-100 text-green-700"
+                  : "bg-yellow-100 text-yellow-700"
+              }`}
+            >
+              {cierre.revisado ? "Revisado" : "Pendiente"}
+            </span>
 
-    {cierre.estado !== "revisado" && (
-      <button
-        onClick={async () => {
-          const { error } = await supabase
-            .from("cierres")
-            .update({ estado: "revisado" })
-            .eq("id", cierre.id);
+            {!cierre.revisado && (
+   <button
+  type="button"
+  onClick={async () => {
+    const { error } = await supabase
+      .from("cierres")
+      .update({ revisado: true })
+      .eq("id", cierre.id);
 
-          if (!error) {
-            setCierre({ ...cierre, estado: "revisado" });
-          }
-        }}
-        className="text-xs bg-black text-white px-3 py-1 rounded"
-      >
-        Marcar como revisado
-      </button>
-    )}
-  </div>
-</div>
+    if (error) {
+      alert(error.message);
+      return;
+    }
 
-        {/* DINERO */}
+    window.location.href = "/admin";
+  }}
+  className="text-xs bg-black text-white px-3 py-1 rounded"
+>
+  Marcar como revisado
+</button>        
+            )}
+          </div>
+        </div>
+
         <div className="bg-white rounded-xl shadow-sm p-4 mb-4 space-y-2">
           <h2 className="font-semibold mb-2">Recaudación</h2>
 
@@ -112,7 +112,6 @@ export default function DetalleCierrePage() {
           </div>
         </div>
 
-        {/* KM */}
         <div className="bg-white rounded-xl shadow-sm p-4 mb-4 space-y-1">
           <h2 className="font-semibold mb-2">Kilometraje</h2>
 
@@ -121,20 +120,16 @@ export default function DetalleCierrePage() {
           <p>Total: {cierre.km_total}</p>
         </div>
 
-        {/* INFO EXTRA */}
         <div className="bg-white rounded-xl shadow-sm p-4 mb-4 space-y-1">
           <h2 className="font-semibold mb-2">Información</h2>
 
           <p>Chofer: {cierre.chofer}</p>
 
           {cierre.created_at && (
-            <p>
-              Hora: {new Date(cierre.created_at).toLocaleTimeString()}
-            </p>
+            <p>Hora: {new Date(cierre.created_at).toLocaleTimeString()}</p>
           )}
         </div>
 
-        {/* OBSERVACIONES */}
         {cierre.observaciones && (
           <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
             <h2 className="font-semibold mb-2">Observaciones</h2>
@@ -142,7 +137,6 @@ export default function DetalleCierrePage() {
           </div>
         )}
 
-        {/* FOTOS */}
         {cierre.foto_reloj_url && (
           <div className="mb-4">
             <p className="mb-2 font-medium">Foto del reloj</p>
@@ -164,7 +158,6 @@ export default function DetalleCierrePage() {
             />
           </div>
         )}
-
       </div>
     </main>
   );
