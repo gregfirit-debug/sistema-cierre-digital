@@ -81,7 +81,8 @@ const cantidadNocturno = cierres.filter((c) =>
         .select(
           "id, fecha, chofer, numero_chofer, movil, turno, total_entregar, created_at, revisado"
         )
-        .order("created_at", { ascending: false });
+     .order("revisado", { ascending: true })
+.order("created_at", { ascending: false });
 
       if (error) {
         setErrorTexto("Error al cargar cierres");
