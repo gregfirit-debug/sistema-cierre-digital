@@ -255,7 +255,33 @@ export default function AdminPage() {
             {cantidadChoferesActivos} / {maxChoferes}
           </p>
         </div>
+<div className="mb-6">
+  <button
+    type="button"
+   onClick={async () => {
+  const { data, error } = await supabase
+    .from("cierres")
+    .update({ archived_at: new Date().toISOString() })
+    .eq("revisado", true)
+    .is("archived_at", null)
+    .select();
 
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  const cantidad = data?.length || 0;
+
+  alert(`Se archivaron ${cantidad} cierres`);
+
+  window.location.reload();
+}}
+    className="rounded-xl bg-gray-800 px-4 py-2 text-sm font-semibold text-white"
+  >
+    Archivar revisados
+  </button>
+</div>
        
                 
 
