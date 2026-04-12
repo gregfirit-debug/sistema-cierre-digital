@@ -39,7 +39,7 @@ export default function DetalleCierrePage() {
   if (!cierre) return <p className="p-6">No encontrado</p>;
 
   return (
-    <main className="min-h-screen p-6 bg-gray-50">
+    <main className="min-h-screen bg-gray-50 p-6">
       <div className="mx-auto max-w-md">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-xl font-bold">Detalle del cierre</h1>
@@ -53,58 +53,85 @@ export default function DetalleCierrePage() {
           </button>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
-          <p className="text-sm text-gray-500">Fecha</p>
-          <p className="font-semibold">{cierre.fecha}</p>
+        <div className="mb-4 rounded-xl bg-white p-4 shadow-sm">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+            <div>
+              <p className="text-sm text-gray-500">Fecha</p>
+              <p className="font-semibold">{cierre.fecha}</p>
+            </div>
 
-          <div className="mt-2 text-sm text-gray-600">
-            {cierre.movil} · {cierre.turno}
+            <div>
+              <p className="text-sm text-gray-500">Número de chofer</p>
+              <p className="font-semibold">{cierre.numero_chofer}</p>
+            </div>
+
+            <div>
+              <p className="text-sm text-gray-500">Número de móvil</p>
+              <p className="font-semibold">{cierre.movil}</p>
+            </div>
+
+            <div>
+              <p className="text-sm text-gray-500">Hora</p>
+              <p className="font-semibold">
+                {cierre.created_at
+                  ? new Date(cierre.created_at).toLocaleTimeString()
+                  : "-"}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-sm text-gray-500">Turno</p>
+              <p className="font-semibold">{cierre.turno}</p>
+            </div>
+
+            <div>
+              <p className="text-sm text-gray-500">Estado</p>
+              <span
+                className={`inline-flex rounded-full px-2 py-1 text-xs ${
+                  cierre.revisado
+                    ? "bg-green-100 text-green-700"
+                    : "bg-yellow-100 text-yellow-700"
+                }`}
+              >
+                {cierre.revisado ? "Revisado" : "Pendiente"}
+              </span>
+            </div>
           </div>
 
-          <div className="mt-3 flex items-center justify-between">
-            <span
-              className={`text-xs px-2 py-1 rounded-full ${
-                cierre.revisado
-                  ? "bg-green-100 text-green-700"
-                  : "bg-yellow-100 text-yellow-700"
-              }`}
-            >
-              {cierre.revisado ? "Revisado" : "Pendiente"}
-            </span>
+          {!cierre.revisado && (
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={async () => {
+                  const { error } = await supabase
+                    .from("cierres")
+                    .update({ revisado: true })
+                    .eq("id", cierre.id);
 
-            {!cierre.revisado && (
-   <button
-  type="button"
-  onClick={async () => {
-    const { error } = await supabase
-      .from("cierres")
-      .update({ revisado: true })
-      .eq("id", cierre.id);
+                  if (error) {
+                    alert(error.message);
+                    return;
+                  }
 
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    window.location.href = "/admin";
-  }}
-  className="text-xs bg-black text-white px-3 py-1 rounded"
->
-  Marcar como revisado
-</button>        
-            )}
-          </div>
+                  router.push("/admin");
+                }}
+                className="rounded bg-black px-3 py-2 text-xs text-white"
+              >
+                Marcar como revisado
+              </button>
+            </div>
+          )}
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-4 mb-4 space-y-2">
-          <h2 className="font-semibold mb-2">Recaudación</h2>
+        <div className="mb-4 space-y-2 rounded-xl bg-white p-4 shadow-sm">
+          <h2 className="mb-2 font-semibold">Recaudación</h2>
 
           <p>Total reloj: ${cierre.total_reloj}</p>
           <p>Total tarjetas: ${cierre.total_tarjetas}</p>
           <p>Gastos: ${cierre.gastos}</p>
           <p>Retira chofer: ${cierre.retira_chofer}</p>
 
-          <div className="bg-green-100 p-3 rounded-xl mt-3">
+          <div className="mt-3 rounded-xl bg-green-100 p-3">
             <p className="text-sm text-gray-600">Total a entregar</p>
             <p className="text-xl font-bold text-green-700">
               ${cierre.total_entregar}
@@ -112,27 +139,17 @@ export default function DetalleCierrePage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-4 mb-4 space-y-1">
-          <h2 className="font-semibold mb-2">Kilometraje</h2>
+        <div className="mb-4 space-y-1 rounded-xl bg-white p-4 shadow-sm">
+          <h2 className="mb-2 font-semibold">Kilometraje</h2>
 
           <p>Inicio: {cierre.km_inicio}</p>
           <p>Fin: {cierre.km_fin}</p>
           <p>Total: {cierre.km_total}</p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-4 mb-4 space-y-1">
-          <h2 className="font-semibold mb-2">Información</h2>
-
-     <p>Chofer: {cierre.chofer}</p>
-<p>Número de chofer: {cierre.numero_chofer}</p>
-          {cierre.created_at && (
-            <p>Hora: {new Date(cierre.created_at).toLocaleTimeString()}</p>
-          )}
-        </div>
-
         {cierre.observaciones && (
-          <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
-            <h2 className="font-semibold mb-2">Observaciones</h2>
+          <div className="mb-4 rounded-xl bg-white p-4 shadow-sm">
+            <h2 className="mb-2 font-semibold">Observaciones</h2>
             <p>{cierre.observaciones}</p>
           </div>
         )}
