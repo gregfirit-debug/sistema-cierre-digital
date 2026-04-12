@@ -285,7 +285,7 @@ export default function AdminPage() {
        
                 
 
-        {maxChoferes > 0 && cantidadChoferesActivos >= maxChoferes && (
+       {maxChoferes > 0 && cantidadChoferesActivos > maxChoferes && (
           <div className="mb-6 rounded-xl bg-red-100 p-3 text-center font-semibold text-red-800">
             Límite de choferes alcanzado. No se pueden agregar más.
           </div>

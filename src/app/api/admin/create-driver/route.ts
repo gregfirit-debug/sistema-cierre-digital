@@ -72,9 +72,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const activos = (choferesData || []).filter(
-      (p) => (p.role === "chofer" || p.role === "user") && p.activo !== false
-    ).length;
+ const activos = (choferesData || []).filter(
+  (p) =>
+    p.role === "chofer" &&
+    p.numero_chofer &&
+    p.activo !== false
+).length;
 
     if (cooperativa.max_choferes && activos >= cooperativa.max_choferes) {
       return NextResponse.json(

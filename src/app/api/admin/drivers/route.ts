@@ -78,8 +78,11 @@ export async function GET(req: NextRequest) {
     }
 
     const choferesActivos = (profilesData || []).filter(
-      (p) => p.numero_chofer && p.activo !== false
-    );
+  (p) =>
+    p.role === "chofer" &&
+    p.numero_chofer &&
+    p.activo !== false
+);
 
     return NextResponse.json({
       choferesActivos,
