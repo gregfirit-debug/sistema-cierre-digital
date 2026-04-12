@@ -15,6 +15,15 @@ type Cierre = {
   total_entregar: number;
   created_at: string;
   revisado: boolean;
+  archived_at: string | null;
+};
+
+type ChoferActivo = {
+  id: string;
+  role: string;
+  activo: boolean;
+  cooperativa_id: string;
+  numero_chofer: string | null;
 };
 
 export default function AdminPage() {
@@ -28,6 +37,9 @@ export default function AdminPage() {
   const [fechaFiltro, setFechaFiltro] = useState("");
   const [cantidadChoferesActivos, setCantidadChoferesActivos] = useState(0);
   const [maxChoferes, setMaxChoferes] = useState(0);
+  const [choferesActivosLista, setChoferesActivosLista] = useState<
+    ChoferActivo[]
+  >([]);
 
   const cantidadDiurno = cierres.filter((c) =>
     String(c.turno || "").toLowerCase().includes("diurno")
@@ -42,6 +54,9 @@ export default function AdminPage() {
 
   useEffect(() => {
     const revisarSesionYCargar = async () => {
+      setCargando(true);
+      setErrorTexto("");
+
       const { data: userData } = await supabase.auth.getUser();
 
       if (!userData.user) {
@@ -72,44 +87,43 @@ export default function AdminPage() {
         return;
       }
 
-   const { data: choferesData, error: choferesError } = await supabase
-  .from("profiles")
-  .select("id, role, activo, cooperativa_id")
-  .eq("cooperativa_id", profile.cooperativa_id);
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-if (!choferesError && choferesData) {
-  const activos = choferesData.filter(
-    (p) =>
-      (p.role === "chofer" || p.role === "user") &&
-      p.activo !== false
-  ).length;
-
-  setCantidadChoferesActivos(activos);
-}   
-
-      const { data: cooperativa, error: cooperativaError } = await supabase
-        .from("cooperativas")
-        .select("activa, max_choferes")
-        .eq("id", profile.cooperativa_id)
-        .single();
-
-      if (cooperativaError || !cooperativa) {
-        setErrorTexto("No se encontró la cooperativa");
+      if (!session?.access_token) {
+        setErrorTexto("Sesión inválida");
         setCargando(false);
         return;
       }
 
-      setMaxChoferes(cooperativa.max_choferes || 0);
-console.log("MAX CHOFERES:", cooperativa.max_choferes);
-console.log("COOPERATIVA ID PROFILE:", profile.cooperativa_id);
-console.log("CHOFERES DATA:", choferesData);
-      const { data, error } = await supabase
-        .from("cierres")
-        .select(
-          "id, fecha, chofer, numero_chofer, movil, turno, total_entregar, created_at, revisado"
-        )
-        .order("revisado", { ascending: true })
-        .order("created_at", { ascending: false });
+    try {
+  const driversRes = await fetch("/api/admin/drivers", {
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+    },
+  });
+
+  const driversJson = await driversRes.json();
+
+  if (!driversRes.ok) {
+    setErrorTexto(driversJson.error || "Error al cargar choferes");
+  } else {
+    setCantidadChoferesActivos(driversJson.cantidadChoferesActivos || 0);
+    setChoferesActivosLista(driversJson.choferesActivos || []);
+    setMaxChoferes(driversJson.maxChoferes || 0);
+  }
+} catch (e: any) {
+  setErrorTexto(e?.message || "Error al cargar choferes");
+} 
+     const { data, error } = await supabase
+  .from("cierres")
+  .select(
+    "id, fecha, chofer, numero_chofer, movil, turno, total_entregar, created_at, revisado, archived_at"
+  )
+  .is("archived_at", null)
+  .order("revisado", { ascending: true })
+  .order("created_at", { ascending: false }); 
 
       if (error) {
         setErrorTexto("Error al cargar cierres");
@@ -150,13 +164,22 @@ console.log("CHOFERES DATA:", choferesData);
               </p>
             </div>
 
-            <div className="flex gap-2">
+          <div className="flex gap-2">
+  <button
+    type="button"
+    onClick={() => router.push("/admin/historico")}
+    className="rounded-xl border px-4 py-2 text-sm font-semibold"
+  >
+    Ver histórico
+  </button>
+              
+
               <button
                 type="button"
-                onClick={() => router.push("/nuevo-cierre")}
-                className="rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-700"
+                onClick={() => router.push("/admin/choferes")}
+                className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white"
               >
-                Nuevo cierre
+                Agregar chofer
               </button>
 
               <button
@@ -182,7 +205,7 @@ console.log("CHOFERES DATA:", choferesData);
         <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-5">
           <div className="rounded-2xl border bg-white p-4 shadow-sm">
             <p className="text-xs uppercase tracking-wide text-gray-400">
-              Total
+              Total cierres
             </p>
             <p className="mt-1 text-2xl font-bold">{cierres.length}</p>
           </div>
@@ -232,6 +255,9 @@ console.log("CHOFERES DATA:", choferesData);
             {cantidadChoferesActivos} / {maxChoferes}
           </p>
         </div>
+
+       
+                
 
         {maxChoferes > 0 && cantidadChoferesActivos >= maxChoferes && (
           <div className="mb-6 rounded-xl bg-red-100 p-3 text-center font-semibold text-red-800">
