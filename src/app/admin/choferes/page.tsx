@@ -10,6 +10,7 @@ export default function AdminChoferesPage() {
   const [numeroChofer, setNumeroChofer] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [mostrarPassword, setMostrarPassword] = useState(false);
   const [mensaje, setMensaje] = useState("");
   const [guardando, setGuardando] = useState(false);
 
@@ -95,13 +96,23 @@ export default function AdminChoferesPage() {
             className="w-full rounded-xl border p-3"
           />
 
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Contraseña"
-            className="w-full rounded-xl border p-3"
-          />
+       <div className="flex gap-2">
+  <input
+    type={mostrarPassword ? "text" : "password"}
+    value={password}
+    onChange={(e) => setPassword(e.target.value)}
+    placeholder="Contraseña"
+    className="w-full rounded-xl border p-3"
+  />
+
+  <button
+    type="button"
+    onClick={() => setMostrarPassword(!mostrarPassword)}
+    className="rounded-xl border px-3 text-sm"
+  >
+    {mostrarPassword ? "Ocultar" : "Mostrar"}
+  </button>
+</div>
 
           <button
             type="button"
