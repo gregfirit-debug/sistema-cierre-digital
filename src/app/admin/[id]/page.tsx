@@ -121,6 +121,27 @@ export default function DetalleCierrePage() {
               </button>
             </div>
           )}
+        <div className="mt-2">
+  <button
+    type="button"
+    onClick={async () => {
+      const { error } = await supabase
+        .from("cierres")
+        .update({ archived_at: new Date().toISOString() })
+        .eq("id", cierre.id);
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      router.push("/admin");
+    }}
+    className="text-xs bg-gray-700 text-white px-3 py-2 rounded"
+  >
+    Archivar
+  </button>
+</div>  
         </div>
 
         <div className="mb-4 space-y-2 rounded-xl bg-white p-4 shadow-sm">
