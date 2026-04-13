@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [mostrarPassword, setMostrarPassword] = useState(false);
   const [mensaje, setMensaje] = useState("");
   const [cargando, setCargando] = useState(false);
 
@@ -69,13 +70,31 @@ export default function LoginPage() {
           className="w-full border rounded-xl p-3 mb-3"
         />
 
-        <input
-          type="password"
-          placeholder="Contraseña"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full border rounded-xl p-3 mb-3"
-        />
+       <div className="flex gap-2 mb-3">
+  <input
+    type={mostrarPassword ? "text" : "password"}
+    placeholder="Contraseña"
+    value={password}
+    onChange={(e) => setPassword(e.target.value)}
+    className="w-full border rounded-xl p-3"
+  />
+<p className="mb-3 text-right text-sm">
+  <button
+    type="button"
+    onClick={() => router.push("/forgot-password")}
+    className="text-blue-600 hover:underline"
+  >
+    Olvidé mi contraseña
+  </button>
+</p>
+  <button
+    type="button"
+    onClick={() => setMostrarPassword(!mostrarPassword)}
+    className="rounded-xl bg-gray-200 px-3 text-sm font-semibold"
+  >
+    {mostrarPassword ? "Ocultar" : "Mostrar"}
+  </button>
+</div>
 
         <button
           onClick={handleLogin}
