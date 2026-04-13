@@ -1,13 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-export async function GET(req: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
     const authHeader = req.headers.get("authorization");
     const token = authHeader?.replace("Bearer ", "");
 
     if (!token) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    const body = await req.json();
+    const { driverId, activo } = body;
+
+    if (!driverId || typeof activo !== "boolean") {
+      return NextResponse.json(
+        { error: "Faltan datos obligatorios" },
+        { status: 400 }
+      );
     }
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -52,48 +62,49 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
-    const { data: cooperativa, error: cooperativaError } = await supabaseAdmin
-      .from("cooperativas")
-      .select("max_choferes")
-      .eq("id", adminProfile.cooperativa_id)
+    const { data: driverProfile, error: driverProfileError } = await supabaseAdmin
+      .from("profiles")
+      .select("id, cooperativa_id, role")
+      .eq("id", driverId)
       .single();
 
-    if (cooperativaError || !cooperativa) {
+    if (driverProfileError || !driverProfile) {
       return NextResponse.json(
-        { error: "No se encontró cooperativa" },
+        { error: "Chofer no encontrado" },
+        { status: 404 }
+      );
+    }
+
+    if (driverProfile.cooperativa_id !== adminProfile.cooperativa_id) {
+      return NextResponse.json(
+        { error: "No puedes modificar choferes de otra cooperativa" },
+        { status: 403 }
+      );
+    }
+
+    if (driverProfile.role !== "chofer") {
+      return NextResponse.json(
+        { error: "Solo se pueden modificar choferes" },
         { status: 400 }
       );
     }
 
-    const { data: profilesData, error: profilesError } = await supabaseAdmin
+    const { error: updateError } = await supabaseAdmin
       .from("profiles")
-      .select("id, role, activo, cooperativa_id, numero_chofer")
-      .eq("cooperativa_id", adminProfile.cooperativa_id);
+      .update({ activo })
+      .eq("id", driverId);
 
-    if (profilesError) {
+    if (updateError) {
       return NextResponse.json(
-        { error: profilesError.message },
+        { error: updateError.message },
         { status: 400 }
       );
     }
 
-   const choferes = (profilesData || []).filter(
-  (p) => p.role === "chofer" && p.numero_chofer
-);
-
-const choferesActivos = choferes.filter(
-  (p) => p.activo !== false
-);
-
-return NextResponse.json({
-  choferes,
-  choferesActivos,
-  cantidadChoferesActivos: choferesActivos.length,
-  maxChoferes: cooperativa.max_choferes || 0,
-}); 
+    return NextResponse.json({ ok: true });
   } catch (error: any) {
     return NextResponse.json(
-      { error: error?.message || "Error interno al cargar choferes" },
+      { error: error?.message || "Error interno al actualizar chofer" },
       { status: 500 }
     );
   }
