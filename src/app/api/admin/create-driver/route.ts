@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
 
     const { data: choferesData, error: choferesError } = await supabaseAdmin
       .from("profiles")
-      .select("id, role, activo")
+    .select("id, role, activo, numero_chofer")  
       .eq("cooperativa_id", adminProfile.cooperativa_id);
 
     if (choferesError) {
