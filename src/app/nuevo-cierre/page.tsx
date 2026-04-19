@@ -5,13 +5,6 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 export default function NuevoCierrePage() {
-  const [combustible, setCombustible] = useState("");
-  const [aceite, setAceite] = useState("");
-  const [frenos, setFrenos] = useState("");
-  const [neumaticos, setNeumaticos] = useState("");
-  const [otros, setOtros] = useState("");
-
-  
   const router = useRouter();
 
   const [movil, setMovil] = useState("");
@@ -22,7 +15,11 @@ export default function NuevoCierrePage() {
 
   const [totalReloj, setTotalReloj] = useState("");
   const [totalPos, setTotalPos] = useState("");
-  const [gastos, setGastos] = useState("");
+  const [combustible, setCombustible] = useState("");
+  const [aceite, setAceite] = useState("");
+  const [frenos, setFrenos] = useState("");
+  const [neumaticos, setNeumaticos] = useState("");
+  const [otros, setOtros] = useState("");
   const [retiraChofer, setRetiraChofer] = useState("");
 
   const [fotoReloj, setFotoReloj] = useState<File | null>(null);
@@ -50,20 +47,23 @@ export default function NuevoCierrePage() {
     return () => window.clearTimeout(id);
   }, [paso]);
 
- const totalGastos =
-  (Number(combustible) || 0) +
-  (Number(aceite) || 0) +
-  (Number(frenos) || 0) +
-  (Number(neumaticos) || 0) +
-  (Number(otros) || 0);
+  const totalGastos = useMemo(() => {
+    return (
+      (Number(combustible) || 0) +
+      (Number(aceite) || 0) +
+      (Number(frenos) || 0) +
+      (Number(neumaticos) || 0) +
+      (Number(otros) || 0)
+    );
+  }, [combustible, aceite, frenos, neumaticos, otros]);
 
-const totalEntregar = useMemo(() => {
-  const reloj = Number(totalReloj) || 0;
-  const pos = Number(totalPos) || 0;
-  const retiraNumero = Number(retiraChofer) || 0;
+  const totalEntregar = useMemo(() => {
+    const reloj = Number(totalReloj) || 0;
+    const pos = Number(totalPos) || 0;
+    const retiraNumero = Number(retiraChofer) || 0;
 
-  return reloj + pos - totalGastos - retiraNumero;
-}, [totalReloj, totalPos, totalGastos, retiraChofer]);
+    return reloj + pos - totalGastos - retiraNumero;
+  }, [totalReloj, totalPos, totalGastos, retiraChofer]);
 
   const limpiarFormulario = () => {
     setMovil("");
@@ -72,12 +72,11 @@ const totalEntregar = useMemo(() => {
     setKmSalida("");
     setTotalReloj("");
     setTotalPos("");
-    setGastos("");
     setCombustible("");
-setAceite("");
-setFrenos("");
-setNeumaticos("");
-setOtros("");
+    setAceite("");
+    setFrenos("");
+    setNeumaticos("");
+    setOtros("");
     setRetiraChofer("");
     setNumeroChofer("");
     setFotoReloj(null);
@@ -137,7 +136,7 @@ setOtros("");
   const handleContinuarPaso1 = () => {
     setMensaje("");
 
-    if (!movil || !turno || !kmEntrada || !kmSalida) {
+    if (!numeroChofer || !movil || !turno || !kmEntrada || !kmSalida) {
       setMensaje("Completa todos los campos");
       return;
     }
@@ -166,26 +165,27 @@ setOtros("");
   const handleContinuarPaso2 = () => {
     setMensaje("");
 
-   if (!totalReloj || !totalPos || !retiraChofer) {
-  setMensaje("Completa todos los campos");
-  return;
-}
+    if (!totalReloj || !totalPos || !retiraChofer) {
+      setMensaje("Completa todos los campos");
+      return;
+    }
 
-const reloj = Number(totalReloj);
-const pos = Number(totalPos);
-const retiraNumero = Number(retiraChofer); 
+    const reloj = Number(totalReloj);
+    const pos = Number(totalPos);
+    const retiraNumero = Number(retiraChofer);
 
-  if (
-  Number.isNaN(reloj) ||
-  Number.isNaN(pos) ||
-  Number.isNaN(retiraNumero)
-) {
-  setMensaje("Recaudación y retiro deben ser números");
-  return;
-}
+    if (Number.isNaN(reloj) || Number.isNaN(pos) || Number.isNaN(retiraNumero)) {
+      setMensaje("Recaudación y retiro deben ser números");
+      return;
+    }
 
     if (reloj < 0 || pos < 0 || retiraNumero < 0) {
       setMensaje("Los importes no pueden ser negativos");
+      return;
+    }
+
+    if (totalGastos < 0) {
+      setMensaje("Los gastos no pueden ser negativos");
       return;
     }
 
@@ -247,37 +247,38 @@ const retiraNumero = Number(retiraChofer);
       const kmFinNumero = Number(kmSalida);
       const totalRelojNumero = Number(totalReloj);
       const totalPosNumero = Number(totalPos);
-      const gastosNumero = Number(gastos);
       const retiraNumero = Number(retiraChofer);
 
-   const { error: insertError } = await supabase.from("cierres").insert([
-  {
-    fecha: new Date().toISOString().slice(0, 10),
-    chofer: user.email || "Chofer",
-    movil,
-    turno,
-    km_inicio: kmInicioNumero,
-    km_fin: kmFinNumero,
-    km_total: kmFinNumero - kmInicioNumero,
-    total_reloj: totalRelojNumero,
-    total_tarjetas: totalPosNumero,
-    gastos: totalGastos,
-    retira_chofer: retiraNumero,
-    total_entregar:
-  totalRelojNumero + totalPosNumero - totalGastos - retiraNumero,
-    foto_reloj_url: fotoRelojUrl,
-    foto_pos_url: fotoPosUrl,
-    user_id: user.id,
-    cooperativa_id: cooperativaId,
-    numero_chofer: numeroChofer,
-  },
-]);
-     if (insertError) {
-  console.error("INSERT ERROR REAL:", insertError);
-  setMensaje(insertError.message || "Error al guardar cierre");
-  setGuardando(false);
-  return;
-}
+      const { error: insertError } = await supabase.from("cierres").insert([
+        {
+          fecha: new Date().toISOString().slice(0, 10),
+          chofer: user.email || "Chofer",
+          movil,
+          turno,
+          km_inicio: kmInicioNumero,
+          km_fin: kmFinNumero,
+          km_total: kmFinNumero - kmInicioNumero,
+          total_reloj: totalRelojNumero,
+          total_tarjetas: totalPosNumero,
+          gastos: totalGastos,
+          retira_chofer: retiraNumero,
+          total_entregar:
+            totalRelojNumero + totalPosNumero - totalGastos - retiraNumero,
+          foto_reloj_url: fotoRelojUrl,
+          foto_pos_url: fotoPosUrl,
+          user_id: user.id,
+          cooperativa_id: cooperativaId,
+          numero_chofer: numeroChofer,
+        },
+      ]);
+
+      if (insertError) {
+        console.error("INSERT ERROR REAL:", insertError);
+        setMensaje(insertError.message || "Error al guardar cierre");
+        setGuardando(false);
+        return;
+      }
+
       limpiarFormulario();
 
       setTimeout(() => {
@@ -333,7 +334,7 @@ const retiraNumero = Number(retiraChofer);
             <p><strong>Km salida:</strong> {kmSalida}</p>
             <p><strong>Total reloj:</strong> {totalReloj}</p>
             <p><strong>Total POS:</strong> {totalPos}</p>
-            <p><strong>Gastos:</strong> {gastos}</p>
+            <p><strong>Total gastos:</strong> ${totalGastos}</p>
             <p><strong>Retira chofer:</strong> {retiraChofer}</p>
 
             <div className="mt-2 rounded-xl bg-green-100 p-4">
@@ -483,52 +484,74 @@ const retiraNumero = Number(retiraChofer);
               className="w-full rounded-xl border p-3"
             />
 
-          <div className="space-y-2">
-  <input
-    type="number"
-    inputMode="numeric"
-    placeholder="Combustible"
-    value={combustible}
-    onChange={(e) => setCombustible(e.target.value)}
-    className="w-full rounded-xl border p-3"
-  />
+            <div className="space-y-3">
+              <div>
+                <p className="mb-1 text-sm text-gray-600">Combustible</p>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={combustible}
+                  onChange={(e) => setCombustible(e.target.value)}
+                  className="w-full rounded-xl border p-3"
+                />
+              </div>
 
-  <input
-    type="number"
-    inputMode="numeric"
-    placeholder="Aceite"
-    value={aceite}
-    onChange={(e) => setAceite(e.target.value)}
-    className="w-full rounded-xl border p-3"
-  />
+              <div>
+                <p className="mb-1 text-sm text-gray-600">Aceite</p>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={aceite}
+                  onChange={(e) => setAceite(e.target.value)}
+                  className="w-full rounded-xl border p-3"
+                />
+              </div>
 
-  <input
-    type="number"
-    inputMode="numeric"
-    placeholder="Frenos"
-    value={frenos}
-    onChange={(e) => setFrenos(e.target.value)}
-    className="w-full rounded-xl border p-3"
-  />
+              <div>
+                <p className="mb-1 text-sm text-gray-600">Frenos</p>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={frenos}
+                  onChange={(e) => setFrenos(e.target.value)}
+                  className="w-full rounded-xl border p-3"
+                />
+              </div>
 
-  <input
-    type="number"
-    inputMode="numeric"
-    placeholder="Neumáticos"
-    value={neumaticos}
-    onChange={(e) => setNeumaticos(e.target.value)}
-    className="w-full rounded-xl border p-3"
-  />
+              <div>
+                <p className="mb-1 text-sm text-gray-600">Neumáticos</p>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={neumaticos}
+                  onChange={(e) => setNeumaticos(e.target.value)}
+                  className="w-full rounded-xl border p-3"
+                />
+              </div>
 
-  <input
-    type="number"
-    inputMode="numeric"
-    placeholder="Otros"
-    value={otros}
-    onChange={(e) => setOtros(e.target.value)}
-    className="w-full rounded-xl border p-3"
-  />
-</div>
+              <div>
+                <p className="mb-1 text-sm text-gray-600">Otros</p>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={otros}
+                  onChange={(e) => setOtros(e.target.value)}
+                  className="w-full rounded-xl border p-3"
+                />
+              </div>
+            </div>
+
+            <div className="rounded-xl bg-gray-100 p-3">
+              <p className="text-gray-600">Total gastos</p>
+              <p className="text-xl font-semibold text-gray-800">
+                ${totalGastos}
+              </p>
+            </div>
 
             <input
               type="number"
@@ -538,6 +561,13 @@ const retiraNumero = Number(retiraChofer);
               placeholder="Retira chofer"
               className="w-full rounded-xl border p-3"
             />
+
+            <div className="rounded-xl bg-green-100 p-4">
+              <p className="text-gray-600">Total a entregar</p>
+              <p className="text-2xl font-bold text-green-700">
+                ${totalEntregar}
+              </p>
+            </div>
 
             <button
               type="button"
@@ -567,24 +597,25 @@ const retiraNumero = Number(retiraChofer);
 
         <div className="space-y-4">
           <input
-  value={numeroChofer}
-  onChange={(e) => setNumeroChofer(e.target.value)}
-  placeholder="Número de chofer"
-  className="w-full rounded-xl border p-3"
-/>
+            value={numeroChofer}
+            onChange={(e) => setNumeroChofer(e.target.value)}
+            placeholder="Número de chofer"
+            className="w-full rounded-xl border p-3"
+          />
+
           <input
             value={movil}
             onChange={(e) => setMovil(e.target.value)}
-            placeholder="Movil"
+            placeholder="Móvil"
             className="w-full rounded-xl border p-3"
           />
 
           <select
             value={turno}
             onChange={(e) => setTurno(e.target.value)}
-            className="w-full rounded-xl border p-3"
+            className="w-full rounded-xl border bg-white p-3"
           >
-            <option value="">Turno</option>
+            <option value="">Seleccionar turno</option>
             <option value="diurno">Diurno</option>
             <option value="nocturno">Nocturno</option>
           </select>
