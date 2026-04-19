@@ -5,6 +5,13 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 export default function NuevoCierrePage() {
+  const [combustible, setCombustible] = useState("");
+  const [aceite, setAceite] = useState("");
+  const [frenos, setFrenos] = useState("");
+  const [neumaticos, setNeumaticos] = useState("");
+  const [otros, setOtros] = useState("");
+
+  
   const router = useRouter();
 
   const [movil, setMovil] = useState("");
@@ -43,14 +50,20 @@ export default function NuevoCierrePage() {
     return () => window.clearTimeout(id);
   }, [paso]);
 
-  const totalEntregar = useMemo(() => {
-    const reloj = Number(totalReloj) || 0;
-    const pos = Number(totalPos) || 0;
-    const gastosNumero = Number(gastos) || 0;
-    const retiraNumero = Number(retiraChofer) || 0;
+ const totalGastos =
+  (Number(combustible) || 0) +
+  (Number(aceite) || 0) +
+  (Number(frenos) || 0) +
+  (Number(neumaticos) || 0) +
+  (Number(otros) || 0);
 
-    return reloj + pos - gastosNumero - retiraNumero;
-  }, [totalReloj, totalPos, gastos, retiraChofer]);
+const totalEntregar = useMemo(() => {
+  const reloj = Number(totalReloj) || 0;
+  const pos = Number(totalPos) || 0;
+  const retiraNumero = Number(retiraChofer) || 0;
+
+  return reloj + pos - totalGastos - retiraNumero;
+}, [totalReloj, totalPos, totalGastos, retiraChofer]);
 
   const limpiarFormulario = () => {
     setMovil("");
@@ -60,6 +73,11 @@ export default function NuevoCierrePage() {
     setTotalReloj("");
     setTotalPos("");
     setGastos("");
+    setCombustible("");
+setAceite("");
+setFrenos("");
+setNeumaticos("");
+setOtros("");
     setRetiraChofer("");
     setNumeroChofer("");
     setFotoReloj(null);
@@ -148,27 +166,25 @@ export default function NuevoCierrePage() {
   const handleContinuarPaso2 = () => {
     setMensaje("");
 
-    if (!totalReloj || !totalPos || !gastos || !retiraChofer) {
-      setMensaje("Completa todos los campos");
-      return;
-    }
+   if (!totalReloj || !totalPos || !retiraChofer) {
+  setMensaje("Completa todos los campos");
+  return;
+}
 
-    const reloj = Number(totalReloj);
-    const pos = Number(totalPos);
-    const gastosNumero = Number(gastos);
-    const retiraNumero = Number(retiraChofer);
+const reloj = Number(totalReloj);
+const pos = Number(totalPos);
+const retiraNumero = Number(retiraChofer); 
 
-    if (
-      Number.isNaN(reloj) ||
-      Number.isNaN(pos) ||
-      Number.isNaN(gastosNumero) ||
-      Number.isNaN(retiraNumero)
-    ) {
-      setMensaje("Recaudación, gastos y retiro deben ser números");
-      return;
-    }
+  if (
+  Number.isNaN(reloj) ||
+  Number.isNaN(pos) ||
+  Number.isNaN(retiraNumero)
+) {
+  setMensaje("Recaudación y retiro deben ser números");
+  return;
+}
 
-    if (reloj < 0 || pos < 0 || gastosNumero < 0 || retiraNumero < 0) {
+    if (reloj < 0 || pos < 0 || retiraNumero < 0) {
       setMensaje("Los importes no pueden ser negativos");
       return;
     }
@@ -245,10 +261,10 @@ export default function NuevoCierrePage() {
     km_total: kmFinNumero - kmInicioNumero,
     total_reloj: totalRelojNumero,
     total_tarjetas: totalPosNumero,
-    gastos: gastosNumero,
+    gastos: totalGastos,
     retira_chofer: retiraNumero,
     total_entregar:
-      totalRelojNumero + totalPosNumero - gastosNumero - retiraNumero,
+  totalRelojNumero + totalPosNumero - totalGastos - retiraNumero,
     foto_reloj_url: fotoRelojUrl,
     foto_pos_url: fotoPosUrl,
     user_id: user.id,
@@ -467,14 +483,52 @@ export default function NuevoCierrePage() {
               className="w-full rounded-xl border p-3"
             />
 
-            <input
-              type="number"
-              inputMode="numeric"
-              value={gastos}
-              onChange={(e) => setGastos(e.target.value)}
-              placeholder="Gastos"
-              className="w-full rounded-xl border p-3"
-            />
+          <div className="space-y-2">
+  <input
+    type="number"
+    inputMode="numeric"
+    placeholder="Combustible"
+    value={combustible}
+    onChange={(e) => setCombustible(e.target.value)}
+    className="w-full rounded-xl border p-3"
+  />
+
+  <input
+    type="number"
+    inputMode="numeric"
+    placeholder="Aceite"
+    value={aceite}
+    onChange={(e) => setAceite(e.target.value)}
+    className="w-full rounded-xl border p-3"
+  />
+
+  <input
+    type="number"
+    inputMode="numeric"
+    placeholder="Frenos"
+    value={frenos}
+    onChange={(e) => setFrenos(e.target.value)}
+    className="w-full rounded-xl border p-3"
+  />
+
+  <input
+    type="number"
+    inputMode="numeric"
+    placeholder="Neumáticos"
+    value={neumaticos}
+    onChange={(e) => setNeumaticos(e.target.value)}
+    className="w-full rounded-xl border p-3"
+  />
+
+  <input
+    type="number"
+    inputMode="numeric"
+    placeholder="Otros"
+    value={otros}
+    onChange={(e) => setOtros(e.target.value)}
+    className="w-full rounded-xl border p-3"
+  />
+</div>
 
             <input
               type="number"
