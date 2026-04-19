@@ -547,11 +547,14 @@ export default function NuevoCierrePage() {
             </div>
 
             <div className="rounded-xl bg-gray-100 p-3">
-              <p className="text-gray-600">Total gastos</p>
-              <p className="text-xl font-semibold text-gray-800">
-                ${totalGastos}
-              </p>
-            </div>
+  <p className="text-gray-600">Total gastos</p>
+  <p className="text-xl font-semibold text-gray-800">
+    ${totalGastos}
+  </p>
+  <p className="mt-2 text-xs text-gray-500">
+    Combustible: {combustible} | Aceite: {aceite} | Frenos: {frenos} | Neumáticos: {neumaticos} | Otros: {otros}
+  </p>
+</div>
 
             <input
               type="number"
