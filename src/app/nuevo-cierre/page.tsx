@@ -103,7 +103,69 @@ export default function NuevoCierrePage() {
     setMensaje("");
     setPaso((prev) => prev - 1);
   };
+const comprimirImagen = (file: File): Promise<File> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
 
+    reader.onload = () => {
+      const img = new Image();
+
+      img.onload = () => {
+        const maxWidth = 1280;
+        const maxHeight = 1280;
+
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+
+        if (!ctx) {
+          reject(new Error("No se pudo procesar la imagen"));
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              reject(new Error("No se pudo comprimir la imagen"));
+              return;
+            }
+
+            const archivoComprimido = new File(
+              [blob],
+              file.name.replace(/\.[^/.]+$/, "") + ".jpg",
+              {
+                type: "image/jpeg",
+              }
+            );
+
+            resolve(archivoComprimido);
+          },
+          "image/jpeg",
+          0.7
+        );
+      };
+
+      img.onerror = () => reject(new Error("No se pudo cargar la imagen"));
+      img.src = reader.result as string;
+    };
+
+    reader.onerror = () => reject(new Error("No se pudo leer la imagen"));
+    reader.readAsDataURL(file);
+  });
+};
   const subirArchivo = async (
     file: File,
     carpeta: "reloj" | "pos",
@@ -240,8 +302,11 @@ export default function NuevoCierrePage() {
         return;
       }
 
-      const fotoRelojUrl = await subirArchivo(fotoReloj, "reloj", user.id);
-      const fotoPosUrl = await subirArchivo(fotoPos, "pos", user.id);
+      const fotoRelojComprimida = await comprimirImagen(fotoReloj);
+const fotoPosComprimida = await comprimirImagen(fotoPos);
+
+const fotoRelojUrl = await subirArchivo(fotoRelojComprimida, "reloj", user.id);
+const fotoPosUrl = await subirArchivo(fotoPosComprimida, "pos", user.id);
 
       const kmInicioNumero = Number(kmEntrada);
       const kmFinNumero = Number(kmSalida);
