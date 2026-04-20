@@ -111,8 +111,8 @@ const comprimirImagen = (file: File): Promise<File> => {
       const img = new Image();
 
       img.onload = () => {
-        const maxWidth = 1280;
-        const maxHeight = 1280;
+        const maxWidth = 960;
+        const maxHeight = 960;
 
         let width = img.width;
         let height = img.height;
@@ -154,7 +154,7 @@ const comprimirImagen = (file: File): Promise<File> => {
             resolve(archivoComprimido);
           },
           "image/jpeg",
-          0.7
+          0.55
         );
       };
 
@@ -302,11 +302,21 @@ const comprimirImagen = (file: File): Promise<File> => {
         return;
       }
 
-      const fotoRelojComprimida = await comprimirImagen(fotoReloj);
-const fotoPosComprimida = await comprimirImagen(fotoPos);
+     setMensaje("Procesando fotos...");
 
-const fotoRelojUrl = await subirArchivo(fotoRelojComprimida, "reloj", user.id);
-const fotoPosUrl = await subirArchivo(fotoPosComprimida, "pos", user.id);
+const [fotoRelojComprimida, fotoPosComprimida] = await Promise.all([
+  comprimirImagen(fotoReloj),
+  comprimirImagen(fotoPos),
+]);
+
+setMensaje("Subiendo fotos...");
+
+const [fotoRelojUrl, fotoPosUrl] = await Promise.all([
+  subirArchivo(fotoRelojComprimida, "reloj", user.id),
+  subirArchivo(fotoPosComprimida, "pos", user.id),
+]);
+
+setMensaje("Guardando cierre...");
 
       const kmInicioNumero = Number(kmEntrada);
       const kmFinNumero = Number(kmSalida);
